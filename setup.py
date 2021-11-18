@@ -9,7 +9,7 @@ else:
     INSTALL_REQUIRES = ['waveform_collection']
 
 setup(
-    name='polarization_analysis',
-    url='https://github.com/jwbishop/polarization_analysis',
+    name='tcm_py',
+    url='https://github.com/jwbishop/tcm_py',
     install_requires=INSTALL_REQUIRES
 )
