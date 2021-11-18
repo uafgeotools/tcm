@@ -24,8 +24,8 @@ After setting up the conda environment, `install <https://pip.pypa.io/en/latest/
 .. code-block::
 
    conda activate uafinfra
-   git clone https://github.com/uafgeotools/polarization_analysis
-   cd polarization_analysis
+   git clone https://github.com/jwbishop/tcm
+   cd tcm
    pip install -e .
 
 The final command installs the package in "editable" mode, which means that you
@@ -62,6 +62,6 @@ is active. For example,
 
    $ conda activate uafinfra
    $ python
-   >>> import tcm_py
+   >>> import tcm
 
 *Mention documentation here. Perhaps point to the example.py file*

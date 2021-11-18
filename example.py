@@ -1,4 +1,4 @@
-import colorcet as cc
+# import colorcet as cc
 import matplotlib.pyplot as plt
 from matplotlib import dates
 import numpy as np
@@ -150,11 +150,47 @@ its = np.arange(0, npts, sampinc)
 # We need all the data windows to be the same length
 # The last data block is discarded.
 nits = len(its) - int(np.ceil(winlensamp/sampinc))
-print("nits are "+str(nits))
 
 # Pre-allocate data arrays.
 t = np.full(nits, np.nan)
 baz = np.full((nits,), np.nan)
+
+# Loop through the time series and rotate the components
+az_test = np.linspace(0, 360, 720)
+drot = 0.5
+counter = 0
+
+for jj in range(nits):
+    # Get time from middle of window, except for the end.
+    ptr = int(its[jj]), int(its[jj] + winlensamp)
+    try:
+        t[jj] = tvec[ptr[0]+int(winlensamp/2)]
+    except:
+        t[jj] = np.nanmax(t, axis=0)
+
+    test_baz = np.fill(len(az_test), np.nan)
+
+    for kk in range(0, len(az_test)):
+        st.rotate(drot)
+        # Store data traces in an array for processing.
+        data = np.empty((npts, nchans))
+        for ii in range(0, nchans):
+            data[:, ii] = st[ii].data
+
+        # Calculate the cross-spectral matrix S
+        S, freq = pa.calc_csm(data[ptr[0]:ptr[1], :], fs, fmin, fmax)
+
+        # Calculate the coherence and phase spectrum
+        gtest, _ = pa.calc_gp(S, freq)
+        test_baz[kk] = np.mean(gtest)
+
+    # Print progress
+    baz[jj] = np.argmin(test_baz)*drot
+    counter += 1
+    print('{:.1f}%'.format((counter / nits) * 100), end='\r')
+
+
+
 
 # Loop through the time series and rotate the components
 baz_test = np.linspace(0, 360, 721)

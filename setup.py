@@ -9,7 +9,7 @@ else:
     INSTALL_REQUIRES = ['waveform_collection']
 
 setup(
-    name='tcm_py',
-    url='https://github.com/jwbishop/tcm_py',
+    name='tcm',
+    url='https://github.com/jwbishop/tcm',
     install_requires=INSTALL_REQUIRES
 )
