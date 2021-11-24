@@ -7,65 +7,108 @@ import obspy.geodetics.base as obs
 from obspy import read
 
 from waveform_collection import gather_waveforms
-from tcm_py.algorithms import tcm
+from tcm.algorithms import tcm
 
+import os as os
+os.chdir('/Users/jwbishop/Desktop/Matt_TCM_Code/tcm_code_20211103')
 
-# Data collection
-# Data from Haney et al. 2020
-# Co-eruptive tremor from Bogoslof volcano:
-# seismic wavefield composition at regional distances
-# SOURCE = 'IRIS'
-# NETWORK = 'AV'
-# STATION = 'MAPS'
-# LOCATION = '*'
-# CHANNEL = '*'
-# START = UTCDateTime('2017-2-20T02:05:30')
-# END = START + 1*60
+# Read example data
+import scipy.io
+mat = scipy.io.loadmat('dta.mat')['dta']
+# Reading the metadata is a mess - fs = 50 Hz.
+# dum = scipy.io.loadmat('dum.mat')['dum'][0][0]
+# dum.tolist()
 
-# SOURCE = 'IRIS'
-# NETWORK = 'AV'
-# STATION = 'SSLN'
-# LOCATION = '*'
-# CHANNEL = '*'
-# START = UTCDateTime('2020-3-15T23:30:00')
-# END = START + 30*60
-
-# SOURCE = 'IRIS'
-# NETWORK = 'AV'
-# STATION = 'GSMY'
-# LOCATION = '*'
-# CHANNEL = '*'
-# START = UTCDateTime('2020-3-6T15:51:30')
-# END = START + 60
-#
-SOURCE = 'IRIS'
-NETWORK = 'AV'
-STATION = 'SSBA'
-LOCATION = '*'
-CHANNEL = '*'
-START = UTCDateTime(2020, 7, 22, 6, 13, 00)
-END = START + 5*60
-
-SOURCE = 'IRIS'
-NETWORK = 'AV'
-STATION = 'KONW'
-LOCATION = '*'
-CHANNEL = '*'
-START = UTCDateTime('2021-5-26T05:10:33')
-END = START + 4
+nchan = np.shape(mat)[0]
+fs = 50
 
 # Filtering
-FMIN = 0.5 # [Hz]
-FMAX = 10.0 # [Hz]
+fmin = 10.0  # [Hz]
+fmax = 20.0  # [Hz]
 
-# SBA
-# polarization processing
-# WINLEN = 20 # [s]
-# WINOVER = 0.90
+winlen = 4  # [s]
+WIND = WINLEN * fs
+WINOVER = 0.10
+WINDOW = WIND/2
+nfft = np.power(2, int(np.ceil(np.log2(WIND))))
+fss = fs
 
-# polarization processing
-WINLEN = 20 # [s]
-WINOVER = 0.99
+# Data Mapping
+I = mat[0, :]
+E = mat[3, :]
+N = mat[2, :]
+Z = mat[1, :]
+
+# Matt's `wind`
+winlensamp = int(winlen*fs)
+# 90% overlap
+winover = 0.90
+window = winlensamp/2
+sampinc = int((1 - winover) * winlensamp) + 1
+npts = len(I) - winlensamp
+its = np.arange(0, npts, sampinc)
+nits = len(its)
+
+from scipy.signal import csd
+from scipy.fft import rfftfreq
+freq = rfftfreq(nfft, 1/fs)
+# freq = freq[np.where((freq >= FMIN) & (freq <= FMAX))]
+
+Cxy2zi = np.empty((nits, len(freq)), dtype=np.complex128)
+Cxy2ii = np.empty((nits, len(freq)), dtype=np.complex128)
+Cxy2zz = np.empty((nits, len(freq)), dtype=np.complex128)
+# print('Running tcm for %d windows' % nits)
+# Compute the vertical coherence
+for jj in range(0, nits):
+    # Get time from middle of window, except for the end.
+    ptr = [int(its[jj]), int(its[jj] + winlensamp)]
+    # try:
+    #     t[jj] = tvec[ptr[0]+int(winlensamp/2)]
+    # except:
+    #     t[jj] = np.nanmax(t, axis=0)
+
+    f, Cxy2zi[jj, :] = csd(Z[ptr[0]:ptr[1]], I[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+    f, Cxy2ii[jj, :] = csd(I[ptr[0]:ptr[1]], I[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+    f, Cxy2zz[jj, :] = csd(Z[ptr[0]:ptr[1]], Z[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+
+Cxy2 = np.real(np.multiply(Cxy2zi, np.conjugate(Cxy2zi))/np.multiply(Cxy2ii, Cxy2zz))
+Cxy2g = np.abs(Cxy2zi)/np.real(Cxy2ii)
+
+# Time Vector
+tvecC = its/fs
+# Add half the window length [sec]
+tvecC_z = tvecC + winlen/2
+
+# azimuths to scan over
+azvect = np.array(np.arange(-179, 181, 1))
+
+# Get the closest frequency points to the preferred ones
+fmin_ind = np.argmin(np.abs(fmin - f))
+fmax_ind = np.argmin(np.abs(fmax - f))
+
+Cey2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
+Cny2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
+Cee2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
+Cnn2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
+Cne2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
+Cyy2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
+# Loop over windows
+for jj in range(0, nits):
+    ptr = [int(its[jj]), int(its[jj] + winlensamp)]
+    # We only need 7 cross spectra for the angle sum
+    f, Cey2h2p[jj, :] = csd(E[ptr[0]:ptr[1]], I[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+    f, Cny2h2p[jj, :] = csd(N[ptr[0]:ptr[1]], I[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+    f, Cee2h2p[jj, :] = csd(E[ptr[0]:ptr[1]], E[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+    f, Cnn2h2p[jj, :] = csd(N[ptr[0]:ptr[1]], N[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+    f, Cne2h2p[jj, :] = csd(N[ptr[0]:ptr[1]], E[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+    f, Cyy2h2p[jj, :] = csd(I[ptr[0]:ptr[1]], I[ptr[0]:ptr[1]], fs=fs, window='hann', nperseg=None, noverlap=None, nfft=nfft)
+
+    # Angle loop
+    countr = 0
+
+    # Loop over all azimuths
+    
+
 
 # Load synthetic data
 from umbra.IO import read_files as rf
@@ -74,10 +117,10 @@ import umbra.plotting.stream_plots as sp
 from obspy.geodetics.base import gps2dist_azimuth
 
 # SPECFEM
-dir = 'TOPO83'
-srcdir = '/Users/jwbishop/Documents/SPECFEM_Runs/'+dir
-srcdir1 = srcdir+'/mseed'
-files = rf.get_files(srcdir1, '.mseed')
+# dir = 'TOPO83'
+# srcdir = '/Users/jwbishop/Documents/SPECFEM_Runs/'+dir
+# srcdir1 = srcdir+'/mseed'
+# files = rf.get_files(srcdir1, '.mseed')
 
 # HAR JP 3496531.68687 655051.39768 0.0 2890.0
 #latorUTM:       3494942
@@ -86,12 +129,12 @@ files = rf.get_files(srcdir1, '.mseed')
 # dx = 655051.39768 - 657993
 # np.arctan2(dy, dx)*180/np.pi
 
-st = rf.make_stream(srcdir1, ['300_'+dir+'.mseed'])
+# st = rf.make_stream(srcdir1, ['300_'+dir+'.mseed'])
 # st = read('/Users/jwbishop/Documents/SPECFEM_RUNS/TOPO60/HAR_TOPO60.mseed')
-st.resample(20)
-st.filter('bandpass', freqmin=FMIN, freqmax=FMAX, corners=2, zerophase=True)
-st.taper(max_percentage=0.01)
-st.sort(['channel'], reverse=False)
+# st.resample(20)
+# st.filter('bandpass', freqmin=FMIN, freqmax=FMAX, corners=2, zerophase=True)
+# st.taper(max_percentage=0.01)
+# st.sort(['channel'], reverse=False)
 
 # Remove particle velocity traces
 for jj in range(0, 3):
