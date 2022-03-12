@@ -1,4 +1,4 @@
-# import colorcet as cc
+import colorcet as cc
 import matplotlib.pyplot as plt
 from matplotlib import dates
 import numpy as np
@@ -6,7 +6,7 @@ from obspy.core import UTCDateTime
 import obspy.geodetics.base as obs
 from obspy import read
 
-from scipy.signal import csd
+from scipy.signal import csd, windows
 from scipy.fft import rfftfreq
 
 from waveform_collection import gather_waveforms
@@ -33,7 +33,7 @@ freq_min = 10.0
 freq_max = 20.0
 
 # Window length [sec]
-window_length = 4
+window_length = 4.0
 # Window size [samples]
 WIND = window_length * sampling_rate
 # Amount of window overlap
@@ -45,9 +45,11 @@ fss = sampling_rate
 
 # Data Mapping
 Infra = data[:, 0]
-E = data[:, 3]
-N = data[:, 2]
 Z = data[:, 1]
+N = data[:, 2]
+E = data[:, 3]
+
+plt.plot(Z)
 
 # Matt's `wind`
 winlensamp = int(WIND)
@@ -62,39 +64,43 @@ nits = len(its)
 freq = rfftfreq(nfft, 1/sampling_rate)
 # freq = freq[np.where((freq >= FMIN) & (freq <= FMAX))]
 
-Cxy2_zi = np.empty((nits, len(freq)), dtype=np.complex128)
-Cxy2_ii = np.empty((nits, len(freq)), dtype=np.complex128)
-Cxy2_zz = np.empty((nits, len(freq)), dtype=np.complex128)
+Cxy2_zi = np.empty((len(freq), nits), dtype=np.complex128)
+Cxy2_ii = np.full((len(freq), nits), np.nan)
+Cxy2_zz = np.full((len(freq), nits), np.nan)
+Cxy2 = np.full((len(freq), nits), np.nan)
+Cxy2_g = np.full((len(freq), nits), np.nan)
 
 # Compute the vertical coherence
 # For every time window, calculate the cross power
 # spectral density at every frequency
 t = np.full(nits, np.nan)
+win = windows.hamming(int(window), sym=False)
 for jj in range(0, nits):
     # Get time from middle of window, except for the end.
-    ptr = [int(its[jj]), int(its[jj] + winlensamp)]
+    ptr = [int(its[jj]), int(its[jj] + winlensamp + 1)]
     try:
         t[jj] = tvec[ptr[0]+int(winlensamp/2)]
     except:
         t[jj] = np.nanmax(t, axis=0)
 
-    _, Cxy2_zi[jj, :] = csd(
+    _, Cxy2_zi[:, jj] = csd(
         Z[ptr[0]:ptr[1]], Infra[ptr[0]:ptr[1]],
-        fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
-    _, Cxy2_ii[jj, :] = csd(
-        Infra[ptr[0]:ptr[1]], Infra[ptr[0]:ptr[1]], fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
-    _, Cxy2_zz[jj, :] = csd(
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft)
+    _, Cxy2_ii[:, jj] = np.real(csd(
+        Infra[ptr[0]:ptr[1]], Infra[ptr[0]:ptr[1]],
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft))
+    _, Cxy2_zz[:, jj] = np.real(csd(
         Z[ptr[0]:ptr[1]], Z[ptr[0]:ptr[1]],
-        fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft))
 
-# Calculate the normalized coherence between the vertical
-# seismic channel and the infrasound channel
-Cxy2 = np.real(np.multiply(Cxy2_zi, np.conjugate(Cxy2_zi)) / np.multiply(Cxy2_ii, Cxy2_zz))
-# Calculate the gain between the cross spectrum and the infrasound
-Cxy2_g = np.abs(Cxy2_zi) /np.real(Cxy2_ii)
+    # Calculate the normalized coherence between the vertical
+    # seismic channel and the infrasound channel
+    Cxy2[:, jj] = np.real(np.multiply(Cxy2_zi[:, jj], np.conjugate(Cxy2_zi[:, jj]))) / np.multiply(Cxy2_ii[:, jj], Cxy2_zz[:, jj])
+    # Calculate the gain between the cross spectrum and the infrasound
+    Cxy2_g[:, jj] = np.abs(Cxy2_zi[:, jj]) / np.real(Cxy2_ii[:, jj])
 
 # Time Vector
 tvecC = its/sampling_rate
@@ -110,45 +116,45 @@ fmin_ind = np.argmin(np.abs(freq_min - freq))
 fmax_ind = np.argmin(np.abs(freq_max - freq))
 
 
-Cey2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
-Cny2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
-Cee2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
-Cnn2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
-Cne2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
-Cyy2h2p = np.empty((nits, len(freq)), dtype=np.complex128)
-Cxy2h2 = np.empty((nits, len(freq)), dtype=np.complex128)
-s2mw = np.empty((nits, len(azvect)), dtype=np.complex128)
-s22mw = np.empty((nits, len(azvect)), dtype=np.complex128)
+Cey2h2p = np.empty((len(freq), nits), dtype=np.complex128)
+Cny2h2p = np.empty((len(freq), nits), dtype=np.complex128)
+Cee2h2p = np.empty((len(freq), nits), dtype=np.complex128)
+Cnn2h2p = np.empty((len(freq), nits), dtype=np.complex128)
+Cne2h2p = np.empty((len(freq), nits), dtype=np.complex128)
+Cyy2h2p = np.empty((len(freq), nits), dtype=np.complex128)
+Cxy2h2 = np.empty((len(freq), nits), dtype=np.complex128)
+s2mw = np.empty((len(azvect), nits))
+s22mw = np.empty((len(azvect), nits))
 # Loop over windows
 # Calculate the cross spectrum at every frequency
 
 for jj in range(0, nits):
-    ptr = [int(its[jj]), int(its[jj] + winlensamp)]
+    ptr = [int(its[jj]), int(its[jj] + winlensamp + 1)]
     # We only need 7 cross spectra for the angle sum
-    _, Cey2h2p[jj, :] = csd(
+    _, Cey2h2p[:, jj] = csd(
         E[ptr[0]:ptr[1]], Infra[ptr[0]:ptr[1]],
-        fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
-    _, Cny2h2p[jj, :] = csd(
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft)
+    _, Cny2h2p[:, jj] = csd(
         N[ptr[0]:ptr[1]], Infra[ptr[0]:ptr[1]],
-        fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
-    _, Cee2h2p[jj, :] = csd(
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft)
+    _, Cee2h2p[:, jj] = csd(
         E[ptr[0]:ptr[1]], E[ptr[0]:ptr[1]],
-        fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
-    _, Cnn2h2p[jj, :] = csd(
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft)
+    _, Cnn2h2p[:, jj] = csd(
         N[ptr[0]:ptr[1]], N[ptr[0]:ptr[1]],
-        fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
-    _, Cne2h2p[jj, :] = csd(
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft)
+    _, Cne2h2p[:, jj] = csd(
         N[ptr[0]:ptr[1]], E[ptr[0]:ptr[1]],
-        fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
-    _, Cyy2h2p[jj, :] = csd(
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft)
+    _, Cyy2h2p[:, jj] = csd(
         Infra[ptr[0]:ptr[1]], Infra[ptr[0]:ptr[1]],
-        fs=sampling_rate, window='hann',
-        nperseg=nfft, noverlap=None, nfft=nfft)
+        fs=sampling_rate, window=win,
+        nperseg=window, noverlap=50, nfft=nfft)
 
     # Angle loop
     countr = -1
@@ -156,13 +162,13 @@ for jj in range(0, nits):
     for azs in azvect:
         countr += 1
         # Calculate transverse coherence for the trial azimuth
-        Cxy2h2[jj, :] = (np.abs(Cny2h2p[jj, :] * np.sin(azs * np.pi/180) - Cey2h2p[jj, :] * np.cos(azs*np.pi/180))**2) / (np.abs(Cnn2h2p[jj, :] * np.sin(azs * np.pi/180)**2 - 2 * np.real(Cne2h2p[jj, :]) * np.sin(azs * np.pi/180) * np.cos(azs * np.pi/180) + Cee2h2p[jj, :] * np.cos(azs * np.pi/180) * np.cos(azs * np.pi/180)) * np.abs(Cyy2h2p[jj, :]))
+        Cxy2h2[:, jj] = (np.abs(Cny2h2p[:, jj] * np.sin(azs * np.pi/180) - Cey2h2p[:, jj] * np.cos(azs * np.pi/180))**2) / (np.abs(Cnn2h2p[:, jj] * np.sin(azs * np.pi/180)**2 - 2 * np.real(Cne2h2p[:, jj]) * np.sin(azs * np.pi/180) * np.cos(azs * np.pi/180) + Cee2h2p[:, jj] * np.cos(azs * np.pi/180) * np.cos(azs * np.pi/180)) * np.abs(Cyy2h2p[:, jj]))
 
-    # Weighting potential transverse coherence based on vertical coherence
-    s2mw[jj, countr] = np.sum(
-        Cxy2h2[jj, fmin_ind:fmax_ind] * Cxy2[jj, fmin_ind:fmax_ind])
-    # Sum of vertical coherence for denominator of weighted sum
-    s22mw[jj, countr] = np.sum(Cxy2[jj, fmin_ind:fmax_ind])
+        # Weighting potential transverse coherence based on vertical coherence
+        s2mw[countr, jj] = np.sum(
+            Cxy2h2[fmin_ind:fmax_ind, jj] * Cxy2[fmin_ind:fmax_ind, jj])
+        # Sum of vertical coherence for denominator of weighted sum
+        s22mw[countr, jj] = np.sum(Cxy2[fmin_ind:fmax_ind, jj])
 
 
 # Save the extent of the frequency band of interest in indicies
@@ -179,7 +185,7 @@ bbv = np.full(nits, np.nan)
 bbv2 = np.full(nits, np.nan)
 aa2 = np.full(nits, np.nan)
 bb2 = np.full(nits, np.nan)
-for jj in range(0, len(dum) - nsmth):
+for jj in range(0, nits - nsmth):
     # Here are the 2 possible back-azimuths
     idx = np.argsort(np.sum(dum[:, jj:(jj + nsmth)], 1))
     bbv[jj] = idx[0]
@@ -189,19 +195,56 @@ for jj in range(0, len(dum) - nsmth):
     bb2[jj] = np.argmax(np.mean(dum[:, jj:(jj + nsmth)], 1))
 
 # Resolve the 180 degree ambiguity
+# Make this a flag that defaults to `True`
+for jj in range(((nsmth/2) + 1), (nits - (nsmth/2))):
 
-
+"""
+for mm = ((nsmth/2)+1):(length(ww)-(nsmth/2))
+    [Cxy2rz(:,mm),F] = cpsd(Z(1,ww(mm):ww(mm)+wind),N(1,ww(mm):ww(mm)+wind)*cosd(azvect(bbv(mm-(nsmth/2))))+...
+        E(1,ww(mm):ww(mm)+wind)*sind(azvect(bbv(mm-(nsmth/2)))),hanning(window),[],nfftt,fss);
+    [Cxy2rz2(:,mm),F] = cpsd(Z(1,ww(mm):ww(mm)+wind),N(1,ww(mm):ww(mm)+wind)*cosd(azvect(bbv2(mm-(nsmth/2))))+...
+        E(1,ww(mm):ww(mm)+wind)*sind(azvect(bbv2(mm-(nsmth/2)))),hanning(window),[],nfftt,fss);
+    Cxy2rza(:,mm) = angle(Cxy2rz(:,mm));
+    Cxy2rza2(:,mm) = angle(Cxy2rz2(:,mm));
+end
+"""
 #######################
 # Plotting
 #######################
 import matplotlib.pyplot as plt
 fig, axs = plt.subplots(3, 1, sharex='col')
-axs[0].plot(tvec, Infra, c='k')
-axs[1].pcolormesh(t, freq, Cxy2.T)
-axs[2].scatter(t, aa2)
+# Trace
+axs[0].plot(tvec, Z, c='k')
+axs[0].set_ylabel('Displacement \n [m]')
+# Gamma^2
+sc0 = axs[1].pcolormesh(t, freq, Cxy2, cmap=cc.cm.rainbow)
+axs[1].axis('tight')
+axs[1].set_xlim(t[0], t[-1])
+axs[1].set_ylim(freq[0], freq[-1])
+axs[1].set_ylabel('Frequency \n [Hz]', fontsize=12)
+p1 = axs[1].get_position()
+cbaxes1 = fig.add_axes([0.92, p1.y0, 0.02, p1.height])
+hc1 = plt.colorbar(sc0, orientation="vertical",
+                   cax=cbaxes1, ax=axs[1])
+hc1.set_label('Max Weighted \n Coherence')
+sc0.set_clim(0.0, 1.0)
+
+# Back-azimuth Estimate
+sc1 = axs[2].scatter(t, bb2-181, c=aa2, cmap=cc.cm.rainbow)
+axs[2].set_ylim(-180, 180)
+axs[2].set_ylabel('Back-Azimuth \n [Deg.]', fontsize=12)
+p1 = axs[2].get_position()
+cbaxes1 = fig.add_axes([0.92, p1.y0, 0.02, p1.height])
+hc1 = plt.colorbar(sc1, orientation="vertical",
+                   cax=cbaxes1, ax=axs[2])
+hc1.set_label('Max Weighted \n Coherence')
+sc1.set_clim(0.0, 1.0)
+
 axs[2].xaxis_date()
 axs[2].tick_params(axis='x', labelbottom='on')
 axs[2].fmt_xdata = dates.DateFormatter('%HH:%MM')
-axs[2].xaxis.set_major_formatter(dates.DateFormatter("%d-%H:%M"))
+axs[2].xaxis.set_major_formatter(dates.DateFormatter("%H:%M:%S"))
 axs[2].set_xlabel('UTC Time')
-# fig.savefig('TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w")
+fig.savefig('Python_TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w")
+
+os.getcwd()
