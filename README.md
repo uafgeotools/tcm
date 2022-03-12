@@ -1,11 +1,6 @@
-polarization_analysis
+tcm
 =============
-This package consists of tools for seismo-acoustic polarization analysis.
-
-Haney et al 2020 <br>
-Vidale 1986 <br>
-Jurkevics 1988 <br>
-Matoza and Fee 2014 <br>
+This package consists of tools for the transverse coherence minimization (tcm) seismo-acoustic analysis method.
 
 Installation
 ---------------
@@ -22,7 +17,7 @@ After setting up the conda environment, [install](https://pip.pypa.io/en/latest/
 ```
 conda activate uafinfra
 git clone https://github.com/uafgeotools/polarization_analysis
-cd polarization_analysis
+cd tcm
 pip install -e .
 ```
 The final command installs the package in "editable" mode, which means that you
@@ -53,7 +48,7 @@ is active. For example,
 ```
 $ conda activate uafinfra
 $ python
->>> import polarization_analysis
+>>> import tcm
 ```
 *Mention documentation here. Perhaps point to the example.py file*
 
@@ -63,5 +58,4 @@ Authors
 (_Alphabetical order by last name._)
 
 Jordan W. Bishop <br>
-Matthew Haney <br>
-Alexandra Iezzi <br>
+Matthew M. Haney <br>
