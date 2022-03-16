@@ -16,7 +16,7 @@ Information on conda environments (and more) is available [here](https://docs.co
 After setting up the conda environment, [install](https://pip.pypa.io/en/latest/reference/pip_install/#editable-installs) the package by running the terminal commands:
 ```
 conda activate uafinfra
-git clone https://github.com/uafgeotools/polarization_analysis
+git clone https://github.com/uafgeotools/tcm
 cd tcm
 pip install -e .
 ```
@@ -58,4 +58,5 @@ Authors
 (_Alphabetical order by last name._)
 
 Jordan W. Bishop <br>
+David Fee <br>
 Matthew M. Haney <br>
