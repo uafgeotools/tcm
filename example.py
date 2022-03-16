@@ -1,17 +1,12 @@
 from obspy import read
 
-import os as os
-os.chdir('/Users/jwbishop/Documents/Github/tcm')
-
 from tcm.classes import tcm_classes, tcm_data_class
 from tcm.tools import plotting
 
-
 # from waveform_collection import gather_waveforms
-# from tcm.algorithms import tcm
 
 # Read example data
-st = read('/Users/jwbishop/Desktop/Matt_TCM_Code/TCM_Example_GSMY.mseed')
+st = read('TCM_Example_GSMY.mseed')
 
 # Filter range [Hz]
 freq_min = 10.0
