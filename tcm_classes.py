@@ -187,12 +187,15 @@ class Spectral:
         tst1 = np.sum(self.Cxy2rza[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         tst2 = np.sum(self.Cxy2rza2[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         # See which one is the farthest from -pi/2
-        self.bbvf = np.full(data.nits - self.nsmth, np.nan)
+        self.baz_final = np.full(data.nits - self.nsmth, np.nan)
         for jj in range(0, len(bbv)):
             tst_ind = np.argmax(np.abs(np.array([tst1[jj], tst2[jj]]) - (-np.pi/2))) # noqa
             if tst_ind == 0:
-                self.bbvf[jj] = bbv[jj]
+                self.baz_final[jj] = bbv[jj]
             else:
-                self.bbvf[jj] = bbv2[jj]
+                self.baz_final[jj] = bbv2[jj]
 
-        return self.bbvf
+        # Convert azimuth to back-azimuth
+        self.baz_final -= 181
+
+        return self.baz_final
