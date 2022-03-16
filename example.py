@@ -1,17 +1,12 @@
 from obspy import read
 
-import os as os
-os.chdir('/Users/jwbishop/Documents/Github/tcm')
-
-import tcm_classes
-import tcm_data_class
-from plotting import tcm_plot
+from tcm.classes import tcm_classes, tcm_data_class
+from tcm.tools import plotting
 
 # from waveform_collection import gather_waveforms
-# from tcm.algorithms import tcm
 
 # Read example data
-st = read('/Users/jwbishop/Desktop/Matt_TCM_Code/TCM_Example_GSMY.mseed')
+st = read('TCM_Example_GSMY.mseed')
 
 # Filter range [Hz]
 freq_min = 10.0
@@ -57,4 +52,4 @@ baz = CSM.find_minimum_tc(data)
 # print(elapsed)
 
 # Plot the results
-fig, axs = tcm_plot(data, CSM)
+fig, axs = plotting.tcm_plot(data, CSM)

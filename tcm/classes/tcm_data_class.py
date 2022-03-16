@@ -34,5 +34,4 @@ class DataBin:
             self.N = st[2].data
             self.Z = st[3].data
         else:
-            pass
-            # Raise an Error here for streams with more/less than 4 channels
+            raise TypeError("The input data stream must have 4 channels.")
