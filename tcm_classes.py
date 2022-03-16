@@ -82,15 +82,15 @@ class Spectral:
             _, self.S_zi[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
             _, self.S_ii[:, jj] = np.real(csd(
                 data.Infra[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft))
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft))
             _, self.S_zz[:, jj] = np.real(csd(
                 data.Z[t0_ind:tf_ind], data.Z[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft))
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft))
 
             # Calculate the normalized coherence between the vertical
             # seismic channel and the infrasound channel
@@ -120,27 +120,23 @@ class Spectral:
             _, self.S_ei[:, jj] = csd(
                 data.E[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
             _, self.S_ni[:, jj] = csd(
                 data.N[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
             _, self.S_ee[:, jj] = np.real(csd(
                 data.E[t0_ind:tf_ind], data.E[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft))
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft))
             _, self.S_nn[:, jj] = np.real(csd(
                 data.N[t0_ind:tf_ind], data.N[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft))
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft))
             _, self.S_ne[:, jj] = csd(
                 data.N[t0_ind:tf_ind], data.E[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
-            # _, self.S_ii2[:, jj] = csd(
-            #     data.Infra[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-            #     fs=data.sampling_rate, window=self.window,
-            #     nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
 
             """ Loop over all azimuths and calculate transverse
             coherence for the trial azimuth. """
@@ -160,7 +156,7 @@ class Spectral:
     def find_minimum_tc(self, data):
         # Apply some smoothing if desired
         # Number of samples in coherogram to smooth
-        self.nsmth = 4
+        self.nsmth = 5
         bbv = np.full(data.nits - self.nsmth, 0, dtype='int')
         bbv2 = np.full(data.nits - self.nsmth, 0, dtype='int')
         self.aa2 = np.full(data.nits - self.nsmth, np.nan)
@@ -184,7 +180,6 @@ class Spectral:
         self.Cxy2rz2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
         self.Cxy2rza = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
         self.Cxy2rza2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
-        # for jj in range(((nsmth/2) + 1), (nits - (nsmth/2))):
         for jj in range(0, data.nits - self.nsmth):
             t0_ind = data.intervals[jj]
             tf_ind = data.intervals[jj] + data.winlensamp
@@ -192,11 +187,11 @@ class Spectral:
                 data.Z[t0_ind:tf_ind], data.N[t0_ind:tf_ind] * np.cos(
                     self.az_vector[bbv[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(
                         self.az_vector[bbv[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft) # noqa
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft) # noqa
             _, self.Cxy2rz2[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.N[t0_ind:tf_ind] * np.cos(
                     self.az_vector[bbv2[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[bbv2[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft) # noqa
+                nperseg=self.sub_window, noverlap=None, nfft=self.nfft) # noqa
             self.Cxy2rza[:, jj] = np.angle(self.Cxy2rz[:, jj])
             self.Cxy2rza2[:, jj] = np.angle(self.Cxy2rz2[:, jj])
         # The time vector for the case of nonzero smoothing
