@@ -59,7 +59,7 @@ class Spectral:
         # Get the closest frequency points to the preferred ones
         self.fmin_ind = np.argmin(np.abs(data.freq_min - self.freq_vector))
         self.fmax_ind = np.argmin(np.abs(data.freq_max - self.freq_vector))
-        # Pre-allocate cross spectral matrices
+        # Pre-allocate cross spectral matrices (S)
         # Vertical and Infrasound
         self.S_zi = np.empty((len(self.freq_vector),
                               data.nits), dtype=np.complex)

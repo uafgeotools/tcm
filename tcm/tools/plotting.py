@@ -1,4 +1,3 @@
-import colorcet as cc
 import matplotlib.pyplot as plt
 from matplotlib import dates
 
@@ -10,7 +9,7 @@ def tcm_plot(data, CSM):
     axs[0].set_ylabel('Displacement \n [m]')
     # Magnitude squared coherence
     sc0 = axs[1].pcolormesh(CSM.t, CSM.freq_vector, CSM.Cxy2,
-                            cmap=cc.cm.rainbow, shading='auto')
+                            cmap='plasma', shading='auto')
     axs[1].axis('tight')
     axs[1].set_xlim(CSM.t[0], CSM.t[-1])
     axs[1].set_ylim(CSM.freq_vector[0], CSM.freq_vector[-1])
@@ -23,7 +22,7 @@ def tcm_plot(data, CSM):
     sc0.set_clim(0.0, 1.0)
 
     # Back-azimuth Estimate
-    sc1 = axs[2].scatter(CSM.t[CSM.smvc], CSM.baz_final, c=CSM.aa2, cmap=cc.cm.rainbow)
+    sc1 = axs[2].scatter(CSM.t[CSM.smvc], CSM.baz_final, c=CSM.aa2, cmap='plasma')
     # axs[2].set_ylim(-180, 180)
     axs[2].axhline(-52, c='k', linestyle=':')
     axs[2].set_ylim(-180, 180)
