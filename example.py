@@ -7,6 +7,7 @@ import os as os
 os.chdir('/Users/jwbishop/Documents/Github/tcm')
 
 import tcm_classes
+import tcm_data_class
 
 # from waveform_collection import gather_waveforms
 # from tcm.algorithms import tcm
@@ -40,11 +41,13 @@ assume_retrograde = True
 # t = time.time()
 
 # Create object to hold data and pre-process
-data = tcm_classes.DataBin(freq_min, freq_max, window_length, window_overlap, az_min, az_max, az_delta, assume_retrograde)
+data = tcm_data_class.DataBin(freq_min, freq_max, window_length, window_overlap, az_min, az_max, az_delta, assume_retrograde)
 data.build_data_arrays(st)
 
 # Create cross-spectral matrix object
 CSM = tcm_classes.Spectral(data)
+# Calculate spectra and cross-spectra
+CSM.calculate_spectral_matrices(data)
 # Calculate the vertical coherence
 CSM.calculate_vertical_Cxy2(data)
 # Calculate the transverse coherence over all trial azimuths
