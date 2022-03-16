@@ -4,6 +4,41 @@ from scipy.fft import rfftfreq
 from numba import jit
 
 
+@jit(nopython=True)
+def _calculate_vertical_Cxy2(Cxy2, S_zi, S_ii, S_zz, nits):
+    """ Calculate the vertical magnitude-squared coherence """
+    # Loop through time and calculate the CSD at each frequency
+    for jj in range(0, nits):
+        """Calculate the normalized coherence between the vertical
+            seismic channel and the infrasound channel """
+        Cxy2[:, jj] = np.real(np.multiply(S_zi[:, jj], np.conjugate(S_zi[:, jj]))) / np.multiply(S_ii[:, jj], S_zz[:, jj]) # noqa
+
+    return Cxy2
+
+
+@jit(nopython=True)
+def _calculate_tcm_over_azimuths(nits, az_vector, Cxy2, Cxy2_trial, S_ni,
+                                 S_ei, S_nn, S_ne, S_ee, S_ii,
+                                 weighted_coherence_v, sum_coherence_v,
+                                 fmin_ind, fmax_ind):
+    # Loop over time
+    for jj in range(0, nits):
+        """ Loop over all azimuths and calculate transverse
+        coherence for the trial azimuth. """
+        for kk in range(0, len(az_vector)):
+            Cxy2_trial[:, jj] = (np.abs(S_ni[:, jj] * np.sin(az_vector[kk] * np.pi/180) - S_ei[:, jj] * np.cos(az_vector[kk] * np.pi/180))**2) / (np.abs(S_nn[:, jj] * np.sin(az_vector[kk] * np.pi/180)**2 - np.real(S_ne[:, jj]) * np.sin(2 * az_vector[kk] * np.pi/180) + S_ee[:, jj] * np.cos(az_vector[kk] * np.pi/180)**2) * np.abs(S_ii[:, jj])) # noqa
+
+            """ Weighting trial transverse coherence values using
+                the vertical coherence. """
+            weighted_coherence_v[kk, jj] = np.sum(Cxy2_trial[fmin_ind:fmax_ind, jj] * Cxy2[fmin_ind:fmax_ind, jj]) # noqa
+            # Sum of vertical coherence for denominator of weighted sum
+            sum_coherence_v[kk, jj] = np.sum(Cxy2[fmin_ind:fmax_ind, jj])
+
+    weighted_coherence = weighted_coherence_v/sum_coherence_v # noqa
+
+    return weighted_coherence
+
+
 class Spectral:
     """ A cross spectral matrix class"""
 
@@ -19,6 +54,11 @@ class Spectral:
         self.freq_vector = rfftfreq(self.nfft, 1/data.sampling_rate)
         # Pre-allocate time vector
         self.t = np.full(data.nits, np.nan)
+        # Create azimuth vector [degrees]
+        self.az_vector = np.array(np.arange(data.az_min, data.az_max + data.az_delta, data.az_delta)) # noqa
+        # Get the closest frequency points to the preferred ones
+        self.fmin_ind = np.argmin(np.abs(data.freq_min - self.freq_vector))
+        self.fmax_ind = np.argmin(np.abs(data.freq_max - self.freq_vector))
         # Pre-allocate cross spectral matrices
         # Vertical and Infrasound
         self.S_zi = np.empty((len(self.freq_vector),
@@ -39,6 +79,11 @@ class Spectral:
         self.S_ne = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
         # Magnitude Squared Coherence
         self.Cxy2 = np.full((len(self.freq_vector), data.nits), np.nan)
+        # Pre-allocate trial azimuth transverse-coherence matrices
+        self.Cxy2_trial = np.empty((len(self.freq_vector), data.nits))
+        self.weighted_coherence_v = np.empty((len(self.az_vector), data.nits))
+        self.sum_coherence_v = np.empty((len(self.az_vector), data.nits))
+        self.weighted_coherence = np.empty((len(self.freq_vector), data.nits))
 
     def calculate_spectral_matrices(self, data):
         """ Calculate the cross spectral matrices """
@@ -87,45 +132,12 @@ class Spectral:
                 fs=data.sampling_rate, window=self.window,
                 nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
 
-    # @jit(nopython=True)
-    def calculate_vertical_Cxy2(self, data.nits):
+    def calculate_vertical_Cxy2(self, data):
         """ Calculate the vertical magnitude-squared coherence """
-        # Loop through time and calculate the CSD at each frequency
-        for jj in range(0, data.nits):
-            """Calculate the normalized coherence between the vertical
-                seismic channel and the infrasound channel """
-            self.Cxy2[:, jj] = np.real(np.multiply(self.S_zi[:, jj], np.conjugate(self.S_zi[:, jj]))) / np.multiply(self.S_ii[:, jj], self.S_zz[:, jj]) # noqa
+        self.Cxy2 = _calculate_vertical_Cxy2(self.Cxy2, self.S_zi, self.S_ii, self.S_zz, data.nits) # noqa
 
-    # @jit(nopython=True)
     def calculate_tcm_over_azimuths(self, data):
-        # Create azimuth vector [degrees]
-        self.az_vector = np.array(np.arange(data.az_min, data.az_max + data.az_delta, data.az_delta)) # noqa
-
-        # Get the closest frequency points to the preferred ones
-        self.fmin_ind = np.argmin(np.abs(data.freq_min - self.freq_vector))
-        self.fmax_ind = np.argmin(np.abs(data.freq_max - self.freq_vector))
-
-        # Pre-allocate trial azimuth transverse-coherence matrices
-        self.Cxy2_trial = np.empty((len(self.freq_vector), data.nits))
-        self.weighted_coherence_v = np.empty((len(self.az_vector), data.nits))
-        self.sum_coherence_v = np.empty((len(self.az_vector), data.nits))
-
-        # Loop over time
-        for jj in range(0, data.nits):
-            """ Loop over all azimuths and calculate transverse
-            coherence for the trial azimuth. """
-            for kk in range(0, len(self.az_vector)):
-                self.Cxy2_trial[:, jj] = (np.abs(self.S_ni[:, jj] * np.sin(self.az_vector[kk] * np.pi/180) - self.S_ei[:, jj] * np.cos(self.az_vector[kk] * np.pi/180))**2) / (np.abs(self.S_nn[:, jj] * np.sin(self.az_vector[kk] * np.pi/180)**2 - np.real(self.S_ne[:, jj]) * np.sin(2 * self.az_vector[kk] * np.pi/180) + self.S_ee[:, jj] * np.cos(self.az_vector[kk] * np.pi/180)**2) * np.abs(self.S_ii[:, jj])) # noqa
-
-                """ Weighting trial transverse coherence values using
-                    the vertical coherence. """
-                self.weighted_coherence_v[kk, jj] = np.sum(
-                    self.Cxy2_trial[self.fmin_ind:self.fmax_ind, jj] * self.Cxy2[self.fmin_ind:self.fmax_ind, jj]) # noqa
-                # Sum of vertical coherence for denominator of weighted sum
-                self.sum_coherence_v[kk, jj] = np.sum(
-                    self.Cxy2[self.fmin_ind:self.fmax_ind, jj])
-
-        self.weighted_coherence = self.weighted_coherence_v/self.sum_coherence_v # noqa
+        self.weighted_coherence = _calculate_tcm_over_azimuths(data.nits, self.az_vector, self.Cxy2, self.Cxy2_trial, self.S_ni, self.S_ei, self.S_nn, self.S_ne, self.S_ee, self.S_ii, self.weighted_coherence_v, self.sum_coherence_v, self.fmin_ind, self.fmax_ind) # noqa
 
     def find_minimum_tc(self, data):
         # Apply some smoothing if desired
@@ -175,12 +187,15 @@ class Spectral:
         tst1 = np.sum(self.Cxy2rza[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         tst2 = np.sum(self.Cxy2rza2[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         # See which one is the farthest from -pi/2
-        self.bbvf = np.full(data.nits - self.nsmth, np.nan)
+        self.baz_final = np.full(data.nits - self.nsmth, np.nan)
         for jj in range(0, len(bbv)):
             tst_ind = np.argmax(np.abs(np.array([tst1[jj], tst2[jj]]) - (-np.pi/2))) # noqa
             if tst_ind == 0:
-                self.bbvf[jj] = bbv[jj]
+                self.baz_final[jj] = bbv[jj]
             else:
-                self.bbvf[jj] = bbv2[jj]
+                self.baz_final[jj] = bbv2[jj]
 
-        return self.bbvf
+        # Convert azimuth to back-azimuth
+        self.baz_final -= 181
+
+        return self.baz_final
