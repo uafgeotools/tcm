@@ -59,7 +59,7 @@ class Spectral:
         # Pre-allocate cross spectral matrices
         # Vertical and Infrasound
         self.S_zi = np.empty((len(self.freq_vector),
-                              data.nits), dtype=np.complex128)
+                              data.nits), dtype=np.complex)
         # Infrasound
         self.S_ii = np.full((len(self.freq_vector), data.nits), np.nan)
         # Vertical
@@ -103,13 +103,11 @@ class Spectral:
         self.fmin_ind = np.argmin(np.abs(data.freq_min - self.freq_vector))
         self.fmax_ind = np.argmin(np.abs(data.freq_max - self.freq_vector))
         # Pre-allocate cross-spectral matrices
-        # Do these really need to be complex128?
-        self.S_ei = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
-        self.S_ni = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
-        self.S_ee = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
-        self.S_nn = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
-        self.S_ne = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
-        self.S_ii2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
+        self.S_ei = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_ni = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_ee = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_nn = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_ne = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
         self.Cxy2_trial = np.empty((len(self.freq_vector), data.nits))
         self.weighted_coherence_v = np.empty((len(self.az_vector), data.nits))
         self.sum_coherence_v = np.empty((len(self.az_vector), data.nits))
@@ -127,27 +125,27 @@ class Spectral:
                 data.N[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
                 nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
-            _, self.S_ee[:, jj] = csd(
+            _, self.S_ee[:, jj] = np.real(csd(
                 data.E[t0_ind:tf_ind], data.E[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
-            _, self.S_nn[:, jj] = csd(
+                nperseg=self.sub_window, noverlap=50, nfft=self.nfft))
+            _, self.S_nn[:, jj] = np.real(csd(
                 data.N[t0_ind:tf_ind], data.N[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
+                nperseg=self.sub_window, noverlap=50, nfft=self.nfft))
             _, self.S_ne[:, jj] = csd(
                 data.N[t0_ind:tf_ind], data.E[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
                 nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
-            _, self.S_ii2[:, jj] = csd(
-                data.Infra[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
+            # _, self.S_ii2[:, jj] = csd(
+            #     data.Infra[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
+            #     fs=data.sampling_rate, window=self.window,
+            #     nperseg=self.sub_window, noverlap=50, nfft=self.nfft)
 
             """ Loop over all azimuths and calculate transverse
             coherence for the trial azimuth. """
             for kk in range(0, len(self.az_vector)):
-                self.Cxy2_trial[:, jj] = (np.abs(self.S_ni[:, jj] * np.sin(self.az_vector[kk] * np.pi/180) - self.S_ei[:, jj] * np.cos(self.az_vector[kk] * np.pi/180))**2) / (np.abs(self.S_nn[:, jj] * np.sin(self.az_vector[kk] * np.pi/180)**2 - np.real(self.S_ne[:, jj]) * np.sin(2 * self.az_vector[kk] * np.pi/180) + self.S_ee[:, jj] * np.cos(self.az_vector[kk] * np.pi/180)**2) * np.abs(self.S_ii2[:, jj])) # noqa
+                self.Cxy2_trial[:, jj] = (np.abs(self.S_ni[:, jj] * np.sin(self.az_vector[kk] * np.pi/180) - self.S_ei[:, jj] * np.cos(self.az_vector[kk] * np.pi/180))**2) / (np.abs(self.S_nn[:, jj] * np.sin(self.az_vector[kk] * np.pi/180)**2 - np.real(self.S_ne[:, jj]) * np.sin(2 * self.az_vector[kk] * np.pi/180) + self.S_ee[:, jj] * np.cos(self.az_vector[kk] * np.pi/180)**2) * np.abs(self.S_ii[:, jj])) # noqa
 
                 """ Weighting trial transverse coherence values using the
                 vertical coherence. """
@@ -182,10 +180,10 @@ class Spectral:
 
         # Resolve the 180 degree ambiguity
         # Make this a flag that defaults to `True`
-        self.Cxy2rz = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
-        self.Cxy2rz2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
-        self.Cxy2rza = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
-        self.Cxy2rza2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex128) # noqa
+        self.Cxy2rz = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.Cxy2rz2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.Cxy2rza = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.Cxy2rza2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
         # for jj in range(((nsmth/2) + 1), (nits - (nsmth/2))):
         for jj in range(0, data.nits - self.nsmth):
             t0_ind = data.intervals[jj]
