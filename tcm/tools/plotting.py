@@ -9,12 +9,10 @@ def tcm_plot(data, CSM):
     axs[0].plot(data.tvec, data.Z, c='k')
     axs[0].set_ylabel('Displacement \n [m]')
     # Magnitude squared coherence
-    # sc0 = axs[1].pcolormesh(CSM.t, CSM.freq_vector, CSM.Cxy2,
-    #                         cmap='plasma', shading='auto')
     sc0 = axs[1].pcolormesh(CSM.t, CSM.freq_vector, CSM.Cxy2,
                             cmap=cc.cm.rainbow, shading='auto')
     axs[1].axis('tight')
-    # axs[1].set_xlim(CSM.t[0], CSM.t[-1])
+    axs[1].set_xlim(CSM.t[0], CSM.t[-1])
     axs[1].set_ylim(data.freq_min, data.freq_max)
     axs[1].set_ylabel('Frequency \n [Hz]', fontsize=12)
     p1 = axs[1].get_position()
@@ -27,6 +25,10 @@ def tcm_plot(data, CSM):
     # Back-azimuth Estimate
     sc1 = axs[2].scatter(CSM.t[CSM.smvc], CSM.baz_final, 12,
                          c=CSM.aa2, cmap=cc.cm.rainbow)
+    axs[2].scatter(CSM.t[CSM.smvc], CSM.baz_final + CSM.sigma,
+                   c='gray', marker='_', linestyle=':')
+    axs[2].scatter(CSM.t[CSM.smvc], CSM.baz_final - CSM.sigma,
+                   c='gray', marker='_', linestyle=':')
     axs[2].axhline(-52+360, c='k', linestyle=':')
     axs[2].set_ylim(0, 360)
     axs[2].set_ylabel('Back-Azimuth \n [Deg.]', fontsize=12)
