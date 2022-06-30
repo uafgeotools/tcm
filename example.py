@@ -27,7 +27,9 @@ st.sort(['channel'], reverse=True)
 st[0].plot()
 
 # Create object to hold data and pre-process
-data = tcm_data_class.DataBin(freq_min, freq_max, window_length, window_overlap, az_min, az_max, az_delta)
+data = tcm_data_class.DataBin(freq_min, freq_max,
+                              window_length, window_overlap,
+                              az_min, az_max, az_delta)
 data.build_data_arrays(st)
 
 # Create cross-spectral matrix object
