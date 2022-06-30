@@ -11,7 +11,7 @@ def _calculate_vertical_Cxy2(Cxy2, S_zi, S_ii, S_zz, nits):
     for jj in range(0, nits):
         """Calculate the normalized coherence between the vertical
             seismic channel and the infrasound channel """
-        Cxy2[:, jj] = np.real(np.multiply(S_zi[:, jj], np.conjugate(S_zi[:, jj]))) / np.multiply(S_ii[:, jj], S_zz[:, jj]) # noqa
+        Cxy2[:, jj] = np.real(np.multiply(S_zi[:, jj], np.conjugate(S_zi[:, jj])) / np.multiply(S_ii[:, jj], S_zz[:, jj])) # noqa
 
     return Cxy2
 
@@ -45,11 +45,13 @@ class Spectral:
     def __init__(self, data):
         """ Pre-allocate arrays and assignment of FFT-related variables. """
         # Sub-window size
-        self.sub_window = int(data.winlensamp/2)
+        self.sub_window = int(np.round(data.winlensamp/2))
         # FFT length (power of 2)
         self.nfft = np.power(2, int(np.ceil(np.log2(data.winlensamp))))
-        # Filter for FFT
+        # Window
         self.window = windows.hamming(self.sub_window, sym=False)
+        # Number of samples in coherogram to smooth
+        self.nsmth = 4
         # FFT frequency vector
         self.freq_vector = rfftfreq(self.nfft, 1/data.sampling_rate)
         # Pre-allocate time vector
@@ -101,36 +103,28 @@ class Spectral:
 
             _, self.S_zi[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)
             _, self.S_ii[:, jj] = np.real(csd(
                 data.Infra[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft))
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft))
             _, self.S_zz[:, jj] = np.real(csd(
                 data.Z[t0_ind:tf_ind], data.Z[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft))
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft))
             _, self.S_ei[:, jj] = csd(
                 data.E[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)
             _, self.S_ni[:, jj] = csd(
                 data.N[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)
             _, self.S_ee[:, jj] = np.real(csd(
                 data.E[t0_ind:tf_ind], data.E[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft))
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft))
             _, self.S_nn[:, jj] = np.real(csd(
                 data.N[t0_ind:tf_ind], data.N[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft))
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft))
             _, self.S_ne[:, jj] = csd(
                 data.N[t0_ind:tf_ind], data.E[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft)
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)
 
     def calculate_vertical_Cxy2(self, data):
         """ Calculate the vertical magnitude-squared coherence """
@@ -141,10 +135,8 @@ class Spectral:
 
     def find_minimum_tc(self, data):
         # Apply some smoothing if desired
-        # Number of samples in coherogram to smooth
-        self.nsmth = 5
-        bbv = np.full(data.nits - self.nsmth, 0, dtype='int')
-        bbv2 = np.full(data.nits - self.nsmth, 0, dtype='int')
+        self.bbv = np.full(data.nits - self.nsmth, 0, dtype='int')
+        self.bbv2 = np.full(data.nits - self.nsmth, 0, dtype='int')
         self.aa2 = np.full(data.nits - self.nsmth, np.nan)
         self.bb2 = np.full(data.nits - self.nsmth, 0, dtype='int')
 
@@ -152,8 +144,8 @@ class Spectral:
         for jj in range(0, data.nits - self.nsmth):
             idx = np.argsort(np.sum(
                 self.weighted_coherence[:, jj:(jj + self.nsmth + 1)], 1))
-            bbv[jj] = idx[0]
-            bbv2[jj] = idx[1]
+            self.bbv[jj] = idx[0]
+            self.bbv2[jj] = idx[1]
             # Info on the amount of coherence
             self.aa2[jj] = np.max(np.mean(
                 self.weighted_coherence[:, jj:(jj + self.nsmth + 1)], 1))
@@ -164,20 +156,18 @@ class Spectral:
         # Make this a flag that defaults to `True`
         self.Cxy2rz = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
         self.Cxy2rz2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
-        self.Cxy2rza = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
-        self.Cxy2rza2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.Cxy2rza = np.empty((len(self.freq_vector), data.nits)) # noqa
+        self.Cxy2rza2 = np.empty((len(self.freq_vector), data.nits)) # noqa
         for jj in range(0, data.nits - self.nsmth):
             t0_ind = data.intervals[jj]
             tf_ind = data.intervals[jj] + data.winlensamp
             _, self.Cxy2rz[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.N[t0_ind:tf_ind] * np.cos(
-                    self.az_vector[bbv[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(
-                        self.az_vector[bbv[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft) # noqa
+                    self.az_vector[self.bbv[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(
+                        self.az_vector[self.bbv[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
             _, self.Cxy2rz2[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.N[t0_ind:tf_ind] * np.cos(
-                    self.az_vector[bbv2[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[bbv2[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window,
-                nperseg=self.sub_window, noverlap=None, nfft=self.nfft) # noqa
+                    self.az_vector[self.bbv2[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[self.bbv2[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
             self.Cxy2rza[:, jj] = np.angle(self.Cxy2rz[:, jj])
             self.Cxy2rza2[:, jj] = np.angle(self.Cxy2rz2[:, jj])
         # The time vector for the case of nonzero smoothing
@@ -186,16 +176,38 @@ class Spectral:
         # one is the back-azimuth
         tst1 = np.sum(self.Cxy2rza[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         tst2 = np.sum(self.Cxy2rza2[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
-        # See which one is the farthest from -pi/2
+        # Pick the angle the farthest from -pi/2
         self.baz_final = np.full(data.nits - self.nsmth, np.nan)
-        for jj in range(0, len(bbv)):
+        for jj in range(0, len(self.bbv)):
             tst_ind = np.argmax(np.abs(np.array([tst1[jj], tst2[jj]]) - (-np.pi/2))) # noqa
             if tst_ind == 0:
-                self.baz_final[jj] = bbv[jj]
+                self.baz_final[jj] = self.az_vector[self.bbv[jj]]
             else:
-                self.baz_final[jj] = bbv2[jj]
+                self.baz_final[jj] = self.az_vector[self.bbv2[jj]]
 
         # Convert azimuth to back-azimuth
-        self.baz_final -= 181
+        self.baz_final -= 180
+        self.baz_final = (self.baz_final + 360) % 360
 
-        return self.baz_final
+        # Calculate the Uncertainty
+        # See https://docs.obspy.org/_modules/obspy/signal/rotate.html
+        self.Cxy2R = np.empty((len(self.freq_vector), data.nits)) # noqa
+        self.Cxy2T = np.empty((len(self.freq_vector), data.nits)) # noqa
+        # self.sigma = np.full(data.nits - self.nsmth, np.nan)
+        for jj in range(0, data.nits - self.nsmth):
+            t0_ind = data.intervals[jj]
+            tf_ind = data.intervals[jj] + data.winlensamp
+            R = -data.E[t0_ind:tf_ind] * np.sin(
+                    self.baz_final[jj] * np.pi/180) - data.N[t0_ind:tf_ind] * np.cos(self.baz_final[jj] * np.pi/180)
+            T = -data.E[t0_ind:tf_ind] * np.cos(
+                    self.baz_final[jj] * np.pi/180) + data.N[t0_ind:tf_ind] * np.sin(self.baz_final[jj] * np.pi/180)
+            _, self.Cxy2R[:, jj] = csd(R, R, fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
+            _, self.Cxy2T[:, jj] = csd(T, T, fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
+        # The time vector for the case of nonzero smoothing
+        self.smvc = np.arange(((self.nsmth/2) + 1), (data.nits - (self.nsmth/2)) + 1, dtype='int') # noqa
+        A2 = np.sum(self.Cxy2R[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
+        n2 = np.sum(self.Cxy2T[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
+        # Sigma
+        self.sigma = np.sqrt((3 * n2) / (16 * A2))
+
+        return self.baz_final, self.sigma
