@@ -1,11 +1,12 @@
 import numpy as np
 
+
 class DataBin:
     """ Data container for TCM processing"""
 
     def __init__(self, freq_min, freq_max, window_length,
                  window_overlap, az_min, az_max,
-                 az_delta, assume_retrograde=True):
+                 az_delta):
         self.freq_min = freq_min
         self.freq_max = freq_max
         self.window_length = window_length
@@ -13,7 +14,6 @@ class DataBin:
         self.az_min = az_min
         self.az_max = az_max
         self.az_delta = az_delta
-        self.assume_retrograde = assume_retrograde
 
     def build_data_arrays(self, st):
         # Assumes all traces have the same sample rate and length
