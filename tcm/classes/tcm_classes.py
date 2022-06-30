@@ -199,8 +199,8 @@ class Spectral:
                     self.baz_final[jj] * np.pi/180) - data.N[t0_ind:tf_ind] * np.cos(self.baz_final[jj] * np.pi/180) # noqa
             T = -data.E[t0_ind:tf_ind] * np.cos(
                     self.baz_final[jj] * np.pi/180) + data.N[t0_ind:tf_ind] * np.sin(self.baz_final[jj] * np.pi/180) # noqa
-            _, Cxy2R[:, jj] = csd(R, R, fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
-            _, Cxy2T[:, jj] = csd(T, T, fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
+            _, Cxy2R[:, jj] = csd(R, R, fs=data.sampling_rate, scaling='spectrum', window=self.window, nperseg=None, nfft=self.nfft) # noqa
+            _, Cxy2T[:, jj] = csd(T, T, fs=data.sampling_rate, scaling='spectrum', window=self.window, nperseg=None, nfft=self.nfft) # noqa
         # The time vector for the case of nonzero smoothing
         self.smvc = np.arange(((self.nsmth/2) + 1), (data.nits - (self.nsmth/2)) + 1, dtype='int') # noqa
         A2 = np.sum(Cxy2R[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa

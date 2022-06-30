@@ -22,6 +22,7 @@ az_delta = 1.0
 # End User Input
 ################
 # Read example data
+# A signal from Great Sitkin that was recorded at GSMY
 st = read('TCM_Example_GSMY.mseed')
 st.sort(['channel'], reverse=True)
 st[0].plot()
@@ -43,6 +44,7 @@ CSM.calculate_tcm_over_azimuths(data)
 # Find the coherence minima and apply the retrograde assumption if applicable
 baz, sigma = CSM.find_minimum_tc(data)
 
+sigma
 # Plot the results
 fig, axs = plotting.tcm_plot(data, CSM)
 # fig.savefig('Python_TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa
