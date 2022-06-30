@@ -103,28 +103,28 @@ class Spectral:
 
             _, self.S_zi[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
             _, self.S_ii[:, jj] = np.real(csd(
                 data.Infra[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft))
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)) # noqa
             _, self.S_zz[:, jj] = np.real(csd(
                 data.Z[t0_ind:tf_ind], data.Z[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft))
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)) # noqa
             _, self.S_ei[:, jj] = csd(
                 data.E[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
             _, self.S_ni[:, jj] = csd(
                 data.N[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
             _, self.S_ee[:, jj] = np.real(csd(
                 data.E[t0_ind:tf_ind], data.E[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft))
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)) # noqa
             _, self.S_nn[:, jj] = np.real(csd(
                 data.N[t0_ind:tf_ind], data.N[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft))
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)) # noqa
             _, self.S_ne[:, jj] = csd(
                 data.N[t0_ind:tf_ind], data.E[t0_ind:tf_ind],
-                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft)
+                fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
 
     def calculate_vertical_Cxy2(self, data):
         """ Calculate the vertical magnitude-squared coherence """
@@ -152,8 +152,7 @@ class Spectral:
             self.bb2[jj] = np.argmax(np.mean(
                 self.weighted_coherence[:, jj:(jj + self.nsmth + 1)], 1))
 
-        # Resolve the 180 degree ambiguity
-        # Make this a flag that defaults to `True`
+        # Resolve the 180 degree ambiguity by assuming retrograde motion
         self.Cxy2rz = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
         self.Cxy2rz2 = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
         self.Cxy2rza = np.empty((len(self.freq_vector), data.nits)) # noqa
@@ -163,8 +162,7 @@ class Spectral:
             tf_ind = data.intervals[jj] + data.winlensamp
             _, self.Cxy2rz[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.N[t0_ind:tf_ind] * np.cos(
-                    self.az_vector[self.bbv[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(
-                        self.az_vector[self.bbv[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
+                    self.az_vector[self.bbv[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[self.bbv[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
             _, self.Cxy2rz2[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.N[t0_ind:tf_ind] * np.cos(
                     self.az_vector[self.bbv2[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[self.bbv2[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
@@ -191,22 +189,22 @@ class Spectral:
 
         # Calculate the Uncertainty
         # See https://docs.obspy.org/_modules/obspy/signal/rotate.html
-        self.Cxy2R = np.empty((len(self.freq_vector), data.nits)) # noqa
-        self.Cxy2T = np.empty((len(self.freq_vector), data.nits)) # noqa
+        Cxy2R = np.empty((len(self.freq_vector), data.nits)) # noqa
+        Cxy2T = np.empty((len(self.freq_vector), data.nits)) # noqa
         # self.sigma = np.full(data.nits - self.nsmth, np.nan)
         for jj in range(0, data.nits - self.nsmth):
             t0_ind = data.intervals[jj]
             tf_ind = data.intervals[jj] + data.winlensamp
             R = -data.E[t0_ind:tf_ind] * np.sin(
-                    self.baz_final[jj] * np.pi/180) - data.N[t0_ind:tf_ind] * np.cos(self.baz_final[jj] * np.pi/180)
+                    self.baz_final[jj] * np.pi/180) - data.N[t0_ind:tf_ind] * np.cos(self.baz_final[jj] * np.pi/180) # noqa
             T = -data.E[t0_ind:tf_ind] * np.cos(
-                    self.baz_final[jj] * np.pi/180) + data.N[t0_ind:tf_ind] * np.sin(self.baz_final[jj] * np.pi/180)
-            _, self.Cxy2R[:, jj] = csd(R, R, fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
-            _, self.Cxy2T[:, jj] = csd(T, T, fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
+                    self.baz_final[jj] * np.pi/180) + data.N[t0_ind:tf_ind] * np.sin(self.baz_final[jj] * np.pi/180) # noqa
+            _, Cxy2R[:, jj] = csd(R, R, fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
+            _, Cxy2T[:, jj] = csd(T, T, fs=data.sampling_rate, window=self.window, nperseg=None, nfft=self.nfft) # noqa
         # The time vector for the case of nonzero smoothing
         self.smvc = np.arange(((self.nsmth/2) + 1), (data.nits - (self.nsmth/2)) + 1, dtype='int') # noqa
-        A2 = np.sum(self.Cxy2R[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
-        n2 = np.sum(self.Cxy2T[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
+        A2 = np.sum(Cxy2R[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
+        n2 = np.sum(Cxy2T[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         # Sigma
         self.sigma = np.sqrt((3 * n2) / (16 * A2))
 
