@@ -8,10 +8,10 @@ freq_min = 10.0
 freq_max = 20.0
 
 # Window length [sec]
-window_length = 6.0
+window_length = 4.0
 
 # Fraction of window overlap [0.0, 1.0)
-window_overlap = 0.50
+window_overlap = 0.90
 
 # Azimuths to scans over [degrees]
 az_min = 0.0
@@ -25,7 +25,7 @@ az_delta = 1.0
 # A signal from Great Sitkin that was recorded at GSMY
 st = read('TCM_Example_GSMY.mseed')
 st.sort(['channel'], reverse=True)
-st[0].plot()
+#st[0].plot()
 
 # Create object to hold data and pre-process
 data = tcm_data_class.DataBin(freq_min, freq_max,
