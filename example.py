@@ -8,7 +8,7 @@ freq_min = 10.0
 freq_max = 20.0
 
 # Window length [sec]
-window_length = 4.0
+window_length = 8.0
 
 # Fraction of window overlap [0.0, 1.0)
 window_overlap = 0.90
@@ -38,7 +38,7 @@ CSM = tcm_classes.Spectral(data)
 # Calculate spectra and cross-spectra
 CSM.calculate_spectral_matrices(data)
 # Calculate the vertical coherence
-CSM.calculate_vertical_Cxy2(data)
+#CSM.calculate_vertical_Cxy2(data)
 # Calculate the transverse coherence over all trial azimuths
 CSM.calculate_tcm_over_azimuths(data)
 # Find the coherence minima and apply the retrograde assumption if applicable
@@ -48,3 +48,5 @@ sigma
 # Plot the results
 fig, axs = plotting.tcm_plot(data, CSM)
 # fig.savefig('Python_TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa
+
+# fig.savefig('Python_TCM_Example_0722.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa
