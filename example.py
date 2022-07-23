@@ -37,16 +37,11 @@ data.build_data_arrays(st)
 CSM = tcm_classes.Spectral(data)
 # Calculate spectra and cross-spectra
 CSM.calculate_spectral_matrices(data)
-# Calculate the vertical coherence
-#CSM.calculate_vertical_Cxy2(data)
 # Calculate the transverse coherence over all trial azimuths
 CSM.calculate_tcm_over_azimuths(data)
 # Find the coherence minima and apply the retrograde assumption if applicable
 baz, sigma = CSM.find_minimum_tc(data)
 
-sigma
 # Plot the results
 fig, axs = plotting.tcm_plot(data, CSM)
-# fig.savefig('Python_TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa
-
-# fig.savefig('Python_TCM_Example_0722.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa
+fig.savefig('Python_TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa

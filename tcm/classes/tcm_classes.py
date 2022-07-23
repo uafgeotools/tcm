@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import csd, windows, coherence
+from scipy.signal import csd, coherence
 from scipy.fft import rfftfreq
 from numba import jit
 
@@ -33,19 +33,14 @@ class Spectral:
     def __init__(self, data):
         """ Pre-allocate arrays and assignment of FFT-related variables. """
         # Sub-window size
-        self.sub_window = int(np.round(data.winlensamp/2))
-        # FFT length (power of 2)
-        #self.nfft = np.power(2, int(np.ceil(np.log2(data.winlensamp))))
-        self.noverlap = int(self.sub_window*.5)
-
-        # Window
-       # self.window = windows.hamming(self.sub_window, sym=False)
+        self.sub_window = int(np.round(data.winlensamp / 2))
+        # Window overlap for spectral estimation [samples]
+        self.noverlap = int(self.sub_window * 0.5)
+        # Window for spectral estimation
         self.window = 'hann'
-
         # Number of samples in coherogram to smooth
         self.nsmth = 8
         # FFT frequency vector
-        #self.freq_vector = rfftfreq(self.nfft, 1/data.sampling_rate)
         self.freq_vector = rfftfreq(self.sub_window, 1/data.sampling_rate)
 
         # Pre-allocate time vector
@@ -146,6 +141,7 @@ class Spectral:
         for jj in range(0, data.nits - self.nsmth):
             idx = np.argsort(np.sum(
                 self.weighted_coherence[:, jj:(jj + self.nsmth + 1)], 1))
+            idx = np.sort(idx[0:2])
             self.bbv[jj] = idx[0]
             self.bbv2[jj] = idx[1]
             # Info on the amount of coherence
@@ -180,7 +176,7 @@ class Spectral:
         self.baz_final = np.full(data.nits - self.nsmth, np.nan)
         for jj in range(0, len(self.bbv)):
             tst_ind = np.argmax(np.abs(np.array([tst1[jj], tst2[jj]]) - (-np.pi/2))) # noqa
-            if tst_ind == 0:
+            if tst_ind == 1:
                 self.baz_final[jj] = self.az_vector[self.bbv[jj]]
             else:
                 self.baz_final[jj] = self.az_vector[self.bbv2[jj]]
