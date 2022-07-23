@@ -33,7 +33,7 @@ class Spectral:
     def __init__(self, data):
         """ Pre-allocate arrays and assignment of FFT-related variables. """
         # Sub-window size
-        self.sub_window = int(np.round(data.winlensamp / 2))
+        self.sub_window = int(np.round(data.winlensamp / 4))
         # Window overlap for spectral estimation [samples]
         self.noverlap = int(self.sub_window * 0.5)
         # Window for spectral estimation
