@@ -18,12 +18,13 @@ def run_tcm(st, freq_min, freq_max, window_length,
     Returns:
         (tuple)
             A tuple of transverse coherence minimization parameters:
-            ``baz`` (array): back-azimuth estimate (degrees)
-            ``sigma`` (array): estimated back-azimuth uncertainty (degrees)
-            ``smoothed_time`` (array): time vector for ``baz`` and ``sigma`` that is smaller due to smoothing.
-            ``freq_vector`` (array):
-            ``time_vector`` (array):
-            ``Cxy2`` (array):
+            ``baz`` (array): back-azimuth estimate (degrees).
+            ``sigma`` (array): estimated back-azimuth uncertainty (degrees).
+            ``smoothed_time`` (array): time vector for ``baz`` and ``sigma`` that accounts for smoothing.
+            ``freq_vector`` (array): frequency vector for Cxy2.
+            ``time_vector`` (array): time vector for Cxy2.
+            ``Cxy2`` (array): Magnitude-squared coherence between the vertical displacement (Z) and the infrasound pressure.
+            ``mean_coherence`` (array):  Mean coherence value across smoothed back-azimuth estimate.
 
     """
     # Create object to hold data and pre-process
@@ -39,6 +40,6 @@ def run_tcm(st, freq_min, freq_max, window_length,
     # Calculate the transverse coherence over all trial azimuths
     CSM.calculate_tcm_over_azimuths(data)
     # Find the coherence minima and apply the retrograde assumption
-    baz, sigma = CSM.find_minimum_tc(data)
+    CSM.find_minimum_tc(data)
 
-    return CSM.baz, CSM.sigma, CSM.t[CSM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2  # noqa
+    return CSM.baz_final, CSM.sigma, CSM.t[CSM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2, CSM.mean_coherence  # noqa
