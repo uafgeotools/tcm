@@ -13,7 +13,7 @@ freq_min = 10.0
 freq_max = 20.0
 
 # Window length [sec]
-window_length = 8.0
+window_length = .0
 
 # Fraction of window overlap [0.0, 1.0)
 window_overlap = 0.90
@@ -78,4 +78,3 @@ fig, axs = plotting.tcm_plot(st, freq_min, freq_max, baz,
 axs[2].scatter(time_smooth, baz + sigma, c='gray', marker='_', linestyle=':')
 axs[2].scatter(time_smooth, baz - sigma, c='gray', marker='_', linestyle=':')
 # fig.savefig('Python_TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa
-# fig.savefig('HOM_tonga_white.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa

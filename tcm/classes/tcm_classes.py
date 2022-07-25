@@ -182,7 +182,7 @@ class Spectral:
                 self.baz_final[jj] = self.az_vector[self.bbv2[jj]]
 
         # Convert azimuth to back-azimuth
-        self.baz_final -= 180
+        #self.baz_final -= 180
         self.baz_final = (self.baz_final + 360) % 360
 
         # Calculate the Uncertainty
