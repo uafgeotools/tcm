@@ -134,8 +134,8 @@ class Spectral:
         # Apply some smoothing if desired
         self.bbv = np.full(data.nits - self.nsmth, 0, dtype='int')
         self.bbv2 = np.full(data.nits - self.nsmth, 0, dtype='int')
-        self.aa2 = np.full(data.nits - self.nsmth, np.nan)
-        self.bb2 = np.full(data.nits - self.nsmth, 0, dtype='int')
+        self.mean_coherence = np.full(data.nits - self.nsmth, np.nan)
+        self.mean_phase_angle = np.full(data.nits - self.nsmth, 0, dtype='int')
 
         # Here are the 2 possible back-azimuths
         for jj in range(0, data.nits - self.nsmth):
@@ -145,9 +145,9 @@ class Spectral:
             self.bbv[jj] = idx[0]
             self.bbv2[jj] = idx[1]
             # Info on the amount of coherence
-            self.aa2[jj] = np.max(np.mean(
+            self.mean_coherence[jj] = np.max(np.mean(
                 self.weighted_coherence[:, jj:(jj + self.nsmth + 1)], 1))
-            self.bb2[jj] = np.argmax(np.mean(
+            self.mean_phase_angle[jj] = np.argmax(np.mean(
                 self.weighted_coherence[:, jj:(jj + self.nsmth + 1)], 1))
 
         # Resolve the 180 degree ambiguity by assuming retrograde motion
@@ -205,5 +205,3 @@ class Spectral:
         n2 = np.sum(Cxy2T[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         # Sigma
         self.sigma = np.sqrt((3 * n2) / (16 * A2))
-
-        return self.baz_final, self.sigma

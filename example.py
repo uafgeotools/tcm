@@ -1,6 +1,6 @@
 from obspy import read
 
-from tcm.classes import tcm_classes, tcm_data_class
+from tcm import tcm
 from tcm.tools import plotting
 
 # Filter range [Hz]
@@ -27,21 +27,15 @@ st = read('TCM_Example_GSMY.mseed')
 st.sort(['channel'], reverse=True)
 #st[0].plot()
 
-# Create object to hold data and pre-process
-data = tcm_data_class.DataBin(freq_min, freq_max,
-                              window_length, window_overlap,
-                              az_min, az_max, az_delta)
-data.build_data_arrays(st)
-
-# Create cross-spectral matrix object
-CSM = tcm_classes.Spectral(data)
-# Calculate spectra and cross-spectra
-CSM.calculate_spectral_matrices(data)
-# Calculate the transverse coherence over all trial azimuths
-CSM.calculate_tcm_over_azimuths(data)
-# Find the coherence minima and apply the retrograde assumption if applicable
-baz, sigma = CSM.find_minimum_tc(data)
+# Run the transverse coherence minimization algorithm
+baz, sigma, time_smooth, frequency_vector, time, Cxy2, mean_coherence = tcm.run_tcm(
+    st, freq_min, freq_max, window_length, window_overlap, az_min, az_max, az_delta) # noqa
 
 # Plot the results
-fig, axs = plotting.tcm_plot(data, CSM)
-fig.savefig('Python_TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa
+fig, axs = plotting.tcm_plot(st, freq_min, freq_max, baz,
+                             time_smooth, frequency_vector, time,
+                             Cxy2, mean_coherence)
+# Plot uncertainties
+axs[2].scatter(time_smooth, baz + sigma, c='gray', marker='_', linestyle=':')
+axs[2].scatter(time_smooth, baz - sigma, c='gray', marker='_', linestyle=':')
+# fig.savefig('Python_TCM_Example.png', bbox_inches='tight', dpi=300, facecolor="w") # noqa
