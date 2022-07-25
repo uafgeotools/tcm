@@ -28,7 +28,8 @@ st.sort(['channel'], reverse=True)
 #st[0].plot()
 
 # Run the transverse coherence minimization algorithm
-baz, sigma, time_smooth, frequency_vector, time, Cxy2, mean_coherence = tcm.run_tcm(st, freq_min, freq_max, window_length, window_overlap, az_min, az_max, az_delta) # noqa
+baz, sigma, time_smooth, frequency_vector, time, Cxy2, mean_coherence = tcm.run_tcm(
+    st, freq_min, freq_max, window_length, window_overlap, az_min, az_max, az_delta) # noqa
 
 # Plot the results
 fig, axs = plotting.tcm_plot(st, freq_min, freq_max, baz,
