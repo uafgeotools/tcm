@@ -27,10 +27,11 @@ class DataBin:
         # Pull time vector from stream object
         self.tvec = st[0].times('matplotlib')
         # Assign the traces to individual arrays
-        st.sort(keys=['channel'])
+        # sorting happens before or here? if here then return stream is different
+        #st.sort(keys=['channel'])
         if len(st) == 4:
-            self.Infra = st[0].data
-            self.E = st[1].data
+            self.Infra = st[1].data
+            self.E = st[0].data
             self.N = st[2].data
             self.Z = st[3].data
         else:
