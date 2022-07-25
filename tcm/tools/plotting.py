@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib import dates
+from matplotlib.colors import LinearSegmentedColormap
 
+colorm = LinearSegmentedColormap.from_list('', ['white', *plt.cm.get_cmap('magma_r').colors])
 
 def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, mean_coherence):  # noqa
     """ Return a plot of the TCM results.
@@ -26,17 +28,21 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
             ``axs``: Output axis handle.
     """
     # Specify the colormap.
-    cm = 'magma_r'
+    #cm = 'magma_r'
+    cm = colorm
+
     # Colorbar/y-axis limits for the vertical coherence
     c_lim = [0.4, 1.0]
     # Specify the time vector for plotting the trace.
-    tvec = st[0].times('matplotlib')
+    tr=st[3]
+    tvec = tr.times('matplotlib')
 
     fig, axs = plt.subplots(3, 1, sharex='col', figsize=(8, 11))
     # Vertical component of seismic trace (displacement)
-    axs[0].plot(tvec, st[0], c='k')
-
+    axs[0].plot(tvec, tr.data, c='k')
     axs[0].set_ylabel('Displacement \n [m]')
+    axs[0].text(.75, .8, tr.id, transform=axs[0].transAxes)
+
     # Magnitude squared coherence
     sc0 = axs[1].pcolormesh(time, freq_vector, Cxy2,
                             cmap=cm, shading='auto')
