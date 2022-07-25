@@ -86,7 +86,7 @@ class Spectral:
             t0_ind = data.intervals[jj]
             tf_ind = data.intervals[jj] + data.winlensamp
             try:
-                self.t[jj] = data.tvec[t0_ind + self.sub_window]
+                self.t[jj] = data.tvec[t0_ind + int(data.winlensamp/2)]
             except:
                 self.t[jj] = np.nanmax(self.t, axis=0)
 
