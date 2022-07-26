@@ -13,7 +13,7 @@ freq_min = 10.0
 freq_max = 20.0
 
 # Window length [sec]
-window_length = .0
+window_length = 8.0
 
 # Fraction of window overlap [0.0, 1.0)
 window_overlap = 0.90
