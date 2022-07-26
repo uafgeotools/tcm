@@ -35,7 +35,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
 
     # Colorbar/y-axis limits for the vertical coherence
     c_lim = [0.4, 1.0]
-    spec_yl = [.1, freq_max]
+    spec_yl = [0.1, freq_max]
     tr_z = st[3]
     tr_f = st[1]
 
@@ -57,13 +57,13 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     # Infrasound
     axs[0].plot(tvec_f, tr_f.data, c='k')
     axs[0].set_ylabel('Pressure [Pa]')
-    axs[0].text(.75, .8, tr_f.id, transform=axs[0].transAxes)
+    axs[0].text(0.75, .8, tr_f.id, transform=axs[0].transAxes)
 
 
     # Vertical component of seismic trace (displacement)
     axs[1].plot(tvec_z, tr_z.data, c='k')
     axs[1].set_ylabel('Displacement [m]')
-    axs[1].text(.75, .8, tr_z.id, transform=axs[1].transAxes)
+    axs[1].text(0.75, .8, tr_z.id, transform=axs[1].transAxes)
 
     # Pressure spectrogram
     im = axs[2].imshow(PspecdB, extent=[tvec_f[0], tvec_f[-1], f[0], f[-1]],
@@ -75,7 +75,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     axs[2].set_xlim(tvec_f[0], tvec_f[-1])
 
     pos1 = axs[2].get_position()
-    cloc = [pos1.x0+pos1.width+.03, pos1.y0, .02, pos1.height]
+    cloc = [pos1.x0+pos1.width+.03, pos1.y0, 0.02, pos1.height]
     cbaxes = fig.add_axes(cloc)
     hc = plt.colorbar(im, cax=cbaxes)
     hc.set_label('PSD [dB re 20\u03bc$Pa^2$/Hz]')
