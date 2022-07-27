@@ -86,7 +86,8 @@ class Spectral:
             t0_ind = data.intervals[jj]
             tf_ind = data.intervals[jj] + data.winlensamp
             try:
-                self.t[jj] = data.tvec[t0_ind + int(data.winlensamp/2)]
+                self.t[jj] = data.tvec[t0_ind + int(
+                    np.round(data.winlensamp/2))]
             except:
                 self.t[jj] = np.nanmax(self.t, axis=0)
 
@@ -163,7 +164,8 @@ class Spectral:
                     self.az_vector[self.bbv[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[self.bbv[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=self.sub_window, noverlap=self.noverlap) # noqa
             _, self.Cxy2rz2[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.N[t0_ind:tf_ind] * np.cos(
-                    self.az_vector[self.bbv2[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[self.bbv2[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=self.sub_window, noverlap=self.noverlap)
+                    self.az_vector[self.bbv2[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(
+                    self.az_vector[self.bbv2[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=self.sub_window, noverlap=self.noverlap)
             self.Cxy2rza[:, jj] = np.angle(self.Cxy2rz[:, jj])
             self.Cxy2rza2[:, jj] = np.angle(self.Cxy2rz2[:, jj])
         # The time vector for the case of nonzero smoothing
@@ -182,14 +184,12 @@ class Spectral:
                 self.baz_final[jj] = self.az_vector[self.bbv2[jj]]
 
         # Convert azimuth to back-azimuth
-        #self.baz_final -= 180
         self.baz_final = (self.baz_final + 360) % 360
 
         # Calculate the Uncertainty
         # See https://docs.obspy.org/_modules/obspy/signal/rotate.html
         Cxy2R = np.empty((len(self.freq_vector), data.nits)) # noqa
         Cxy2T = np.empty((len(self.freq_vector), data.nits)) # noqa
-        # self.sigma = np.full(data.nits - self.nsmth, np.nan)
         for jj in range(0, data.nits - self.nsmth):
             t0_ind = data.intervals[jj]
             tf_ind = data.intervals[jj] + data.winlensamp
