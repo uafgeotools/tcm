@@ -65,5 +65,5 @@ fig, axs = plotting.tcm_plot(st, freq_min, freq_max, baz,
                              time_smooth, frequency_vector, time,
                              Cxy2, mean_coherence)
 # Uncertainties
-axs[2].scatter(time_smooth, baz + sigma, c='gray', marker='_', linestyle=':')
-axs[2].scatter(time_smooth, baz - sigma, c='gray', marker='_', linestyle=':')
+axs[4].scatter(time_smooth, baz + sigma, c='gray', marker='_', linestyle=':')
+axs[4].scatter(time_smooth, baz - sigma, c='gray', marker='_', linestyle=':')
