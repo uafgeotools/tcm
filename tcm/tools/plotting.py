@@ -43,13 +43,12 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     tvec_f = tr_f.times('matplotlib')
     tvec_z = tr_z.times('matplotlib')
 
-
     nper = int(10*tr_f.stats.sampling_rate)
     f, t, Pspec = spectrogram(tr_f.data, fs=tr_f.stats.sampling_rate,
-                              window='hann',scaling='density', nperseg=nper,
-                              noverlap=nper*.5)
+                              window='hann', scaling='density', nperseg=nper,
+                              noverlap=nper*0.5)
 
-    PspecdB = 10 * np.log10( abs(Pspec) / np.power(20e-6, 2))
+    PspecdB = 10 * np.log10(abs(Pspec) / np.power(20e-6, 2))
     cmin = np.nanpercentile(PspecdB, 15)
     cmax = np.nanpercentile(PspecdB, 99.5)
 
@@ -57,13 +56,12 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     # Infrasound
     axs[0].plot(tvec_f, tr_f.data, c='k')
     axs[0].set_ylabel('Pressure [Pa]')
-    axs[0].text(0.75, .8, tr_f.id, transform=axs[0].transAxes)
-
+    axs[0].text(0.75, 0.8, tr_f.id, transform=axs[0].transAxes)
 
     # Vertical component of seismic trace (displacement)
     axs[1].plot(tvec_z, tr_z.data, c='k')
     axs[1].set_ylabel('Displacement [m]')
-    axs[1].text(0.75, .8, tr_z.id, transform=axs[1].transAxes)
+    axs[1].text(0.75, 0.8, tr_z.id, transform=axs[1].transAxes)
 
     # Pressure spectrogram
     im = axs[2].imshow(PspecdB, extent=[tvec_f[0], tvec_f[-1], f[0], f[-1]],
@@ -75,15 +73,12 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     axs[2].set_xlim(tvec_f[0], tvec_f[-1])
 
     pos1 = axs[2].get_position()
-    cloc = [pos1.x0+pos1.width+.03, pos1.y0, 0.02, pos1.height]
+    cloc = [pos1.x0+pos1.width+0.03, pos1.y0, 0.02, pos1.height]
     cbaxes = fig.add_axes(cloc)
     hc = plt.colorbar(im, cax=cbaxes)
     hc.set_label('PSD [dB re 20\u03bc$Pa^2$/Hz]')
 
-    axs[2].xaxis_date()
-
-
-    # Magnitude squared coherence
+    # Magnitude-squared coherence
     sc0 = axs[3].pcolormesh(time, freq_vector, Cxy2,
                             cmap=cm, shading='auto')
     axs[3].axis('tight')
@@ -104,7 +99,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
 
     cbot = p2.y0
     ctop = p1.y1
-    cbaxes = fig.add_axes([p2.x0+p2.width+.03, cbot, 0.02, ctop-cbot])
+    cbaxes = fig.add_axes([p2.x0+p2.width+0.03, cbot, 0.02, ctop-cbot])
     hc = plt.colorbar(sc0, cax=cbaxes)
     hc.set_label('Max Weighted Coherence')
 
