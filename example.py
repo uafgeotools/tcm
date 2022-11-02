@@ -22,8 +22,8 @@ az_min = 0.0
 az_max = 359.0
 az_delta = 1.0
 
-""" Our example signal is an eruption from Great Sitkin Volcano, Alaska
-    that was recorded by station AVO station GSMY. """
+''' Our example signal is an eruption from Great Sitkin Volcano, Alaska
+    that was recorded by AVO station GSMY. '''
 STARTTIME = UTCDateTime('2021-5-26T05:03:00')
 ENDTIME = STARTTIME + 3*60
 
