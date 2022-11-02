@@ -199,9 +199,13 @@ class Spectral:
                     self.baz_final[jj] * np.pi/180) + data.N[t0_ind:tf_ind] * np.sin(self.baz_final[jj] * np.pi/180) # noqa
             _, Cxy2R[:, jj] = csd(R, R, fs=data.sampling_rate, scaling='spectrum', window=self.window, nperseg=self.sub_window, noverlap=self.noverlap) # noqa
             _, Cxy2T[:, jj] = csd(T, T, fs=data.sampling_rate, scaling='spectrum', window=self.window, nperseg=self.sub_window, noverlap=self.noverlap) # noqa
+
         # The time vector for the case of nonzero smoothing
         self.smvc = np.arange(((self.nsmth/2) + 1), (data.nits - (self.nsmth/2)) + 1, dtype='int') # noqa
         A2 = np.sum(Cxy2R[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         n2 = np.sum(Cxy2T[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
-        # Sigma
-        self.sigma = np.sqrt((3 * n2) / (16 * A2))
+
+        # Calculate sigma
+        self.sigma = np.full_like(self.smvc, np.nan)
+        idx_valid = np.where(A2 > 0.0)[0]
+        self.sigma[idx_valid] = np.sqrt((3 * n2[idx_valid]) / (16 * A2[idx_valid]))
