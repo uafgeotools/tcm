@@ -86,7 +86,8 @@ class Spectral:
             t0_ind = data.intervals[jj]
             tf_ind = data.intervals[jj] + data.winlensamp
             try:
-                self.t[jj] = data.tvec[t0_ind + int(data.winlensamp/2)]
+                self.t[jj] = data.tvec[t0_ind + int(
+                    np.round(data.winlensamp/2))]
             except:
                 self.t[jj] = np.nanmax(self.t, axis=0)
 
@@ -163,7 +164,8 @@ class Spectral:
                     self.az_vector[self.bbv[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[self.bbv[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=self.sub_window, noverlap=self.noverlap) # noqa
             _, self.Cxy2rz2[:, jj] = csd(
                 data.Z[t0_ind:tf_ind], data.N[t0_ind:tf_ind] * np.cos(
-                    self.az_vector[self.bbv2[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(self.az_vector[self.bbv2[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=self.sub_window, noverlap=self.noverlap)
+                    self.az_vector[self.bbv2[jj]] * np.pi/180) + data.E[t0_ind:tf_ind] * np.sin(
+                    self.az_vector[self.bbv2[jj]] * np.pi/180), fs=data.sampling_rate, window=self.window, nperseg=self.sub_window, noverlap=self.noverlap)
             self.Cxy2rza[:, jj] = np.angle(self.Cxy2rz[:, jj])
             self.Cxy2rza2[:, jj] = np.angle(self.Cxy2rz2[:, jj])
         # The time vector for the case of nonzero smoothing
@@ -182,14 +184,12 @@ class Spectral:
                 self.baz_final[jj] = self.az_vector[self.bbv2[jj]]
 
         # Convert azimuth to back-azimuth
-        #self.baz_final -= 180
         self.baz_final = (self.baz_final + 360) % 360
 
         # Calculate the Uncertainty
         # See https://docs.obspy.org/_modules/obspy/signal/rotate.html
         Cxy2R = np.empty((len(self.freq_vector), data.nits)) # noqa
         Cxy2T = np.empty((len(self.freq_vector), data.nits)) # noqa
-        # self.sigma = np.full(data.nits - self.nsmth, np.nan)
         for jj in range(0, data.nits - self.nsmth):
             t0_ind = data.intervals[jj]
             tf_ind = data.intervals[jj] + data.winlensamp
@@ -199,9 +199,13 @@ class Spectral:
                     self.baz_final[jj] * np.pi/180) + data.N[t0_ind:tf_ind] * np.sin(self.baz_final[jj] * np.pi/180) # noqa
             _, Cxy2R[:, jj] = csd(R, R, fs=data.sampling_rate, scaling='spectrum', window=self.window, nperseg=self.sub_window, noverlap=self.noverlap) # noqa
             _, Cxy2T[:, jj] = csd(T, T, fs=data.sampling_rate, scaling='spectrum', window=self.window, nperseg=self.sub_window, noverlap=self.noverlap) # noqa
+
         # The time vector for the case of nonzero smoothing
         self.smvc = np.arange(((self.nsmth/2) + 1), (data.nits - (self.nsmth/2)) + 1, dtype='int') # noqa
         A2 = np.sum(Cxy2R[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
         n2 = np.sum(Cxy2T[self.fmin_ind:self.fmax_ind, self.smvc] * self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(self.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
-        # Sigma
-        self.sigma = np.sqrt((3 * n2) / (16 * A2))
+
+        # Calculate sigma
+        self.sigma = np.full_like(self.smvc, np.nan)
+        idx_valid = np.where(A2 > 0.0)[0]
+        self.sigma[idx_valid] = np.sqrt((3 * n2[idx_valid]) / (16 * A2[idx_valid]))
