@@ -2,7 +2,7 @@ import numpy as np
 
 
 class DataBin:
-    """ Data container for TCM processing"""
+    """ Data container for TCM processing. """
 
     def __init__(self, freq_min, freq_max, window_length,
                  window_overlap, az_min, az_max,
@@ -16,6 +16,7 @@ class DataBin:
         self.az_delta = az_delta
 
     def build_data_arrays(self, st):
+        """ Construct data arrays from Obspy Stream object. """
         # Assumes all traces have the same sample rate and length
         self.sampling_rate = st[0].stats.sampling_rate
         self.winlensamp = int(self.window_length * self.sampling_rate) # noqa
