@@ -1,14 +1,17 @@
-Welcome to polarization_analysis' documentation!
-=================================================
+Welcome to tcm's documentation!
+=====================================
+This module describes the Transverse Coherence Minimization (TCM) method for back-azimuth estimation of air-to-ground coupled acoustic waves.
 
 .. toctree::
-   :caption: README:
+    :maxdepth: 2
+    :caption: Contents:
 
-   README.rst
-
+    Introduction.rst
 
 .. toctree::
-   :caption: API:
+    :maxdepth: 2
+    :caption: API Docs:
 
-   api/polarization_analysis.rst
-
+    tcm.rst
+    tcm_classes.rst
+    tcm_data_classes.rst
