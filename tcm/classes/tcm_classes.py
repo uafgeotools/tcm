@@ -28,7 +28,7 @@ def _calculate_tcm_over_azimuths(nits, az_vector, Cxy2, Cxy2_trial, S_ni,
 
 
 class Spectral:
-    """ A cross spectral matrix class"""
+    """ The base class for tcm. """
 
     def __init__(self, data):
         """ Pre-allocate arrays and assignment of FFT-related variables. """
@@ -77,7 +77,7 @@ class Spectral:
         self.weighted_coherence = np.empty((len(self.freq_vector), data.nits))
 
     def calculate_spectral_matrices(self, data):
-        """ Calculate the cross spectral matrices """
+        """ Calculate the cross spectral matrices. """
 
         """ Loop over time windows and calculate the cross spectrum
             at every frequency. """
@@ -129,9 +129,11 @@ class Spectral:
                 nperseg=self.sub_window, noverlap=self.noverlap)
 
     def calculate_tcm_over_azimuths(self, data):
+        """ Calculate the  transverse coherence over all trial azimuths. """
         self.weighted_coherence = _calculate_tcm_over_azimuths(data.nits, self.az_vector, self.Cxy2, self.Cxy2_trial, self.S_ni, self.S_ei, self.S_nn, self.S_ne, self.S_ee, self.S_ii, self.weighted_coherence_v, self.sum_coherence_v, self.fmin_ind, self.fmax_ind) # noqa
 
     def find_minimum_tc(self, data):
+        """ Find the azimuths corresponding to the minimum transverse coherence. """
         # Apply some smoothing if desired
         self.bbv = np.full(data.nits - self.nsmth, 0, dtype='int')
         self.bbv2 = np.full(data.nits - self.nsmth, 0, dtype='int')
