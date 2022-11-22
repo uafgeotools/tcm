@@ -203,6 +203,7 @@ class TCM:
         self.baz_final = (self.baz_final + 360) % 360
 
     def calculate_phase_angle(self, data, spectrum):
+        """ Calculate phase angle between infrasound and vertical seismic. """
         for jj in range(0, data.nits):
             self.phase_angle[:, jj] = np.arctan2(np.real(spectrum.S_zi[:, jj]), np.imag(spectrum.S_zi[:, jj])) * 180/np.pi
 
