@@ -1,12 +1,15 @@
+# Class type hinting only available in Python 3.9+
+from __future__ import annotations
+
+from obspy.core.stream import Stream
 from tcm.classes import tcm_classes, tcm_data_class
 
 
-def run_tcm(st, freq_min, freq_max, window_length,
-            window_overlap, az_min=0.0, az_max=359.0, az_delta=1.0):
+def run_tcm(st: type[Stream], freq_min: float, freq_max: float, window_length: float, window_overlap: float, az_min: float = 0.0, az_max: float = 359.0, az_delta: float = 1.0) -> tuple: # noqa
     """ Process stream data with the transverse coherence minimization algorithm (TCM).
 
     Args:
-        st: Obspy stream object. Assumes response has been removed.
+        st: An obspy stream object. Assumes any preprocessing has already occured.
         freq_min (float): Minimum frequency for analysis.
         freq_max (float): Maximum frequency for analysis.
         window_length (float): Window length in seconds.
