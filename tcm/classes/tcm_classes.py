@@ -188,7 +188,8 @@ class Spectral:
         # Convert azimuth to back-azimuth
         self.baz_final = (self.baz_final + 360) % 360
 
-        # Calculate the Uncertainty
+    def calculate_uncertainty(self, data):
+        """ Calculate uncertainty. """
         # See https://docs.obspy.org/_modules/obspy/signal/rotate.html
         Cxy2R = np.empty((len(self.freq_vector), data.nits)) # noqa
         Cxy2T = np.empty((len(self.freq_vector), data.nits)) # noqa

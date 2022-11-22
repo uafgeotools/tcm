@@ -41,5 +41,7 @@ def run_tcm(st, freq_min, freq_max, window_length,
     CSM.calculate_tcm_over_azimuths(data)
     # Find the coherence minima and apply the retrograde assumption
     CSM.find_minimum_tc(data)
+    # Estimate uncertainty
+    CSM.calculate_uncertainty(data)
 
     return CSM.baz_final, CSM.sigma, CSM.t[CSM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2, CSM.mean_coherence  # noqa
