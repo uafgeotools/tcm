@@ -34,14 +34,18 @@ def run_tcm(st, freq_min, freq_max, window_length,
     data.build_data_arrays(st)
 
     # Create cross-spectral matrix object
-    CSM = tcm_classes.Spectral(data)
+    CSM = tcm_classes.SpectralEstimation(data)
     # Calculate spectra, cross-spectra, and vertical component coherence
     CSM.calculate_spectral_matrices(data)
+    # Create the TCM object
+    TCM = tcm_classes.TCM(data, CSM)
     # Calculate the transverse coherence over all trial azimuths
-    CSM.calculate_tcm_over_azimuths(data)
+    TCM.calculate_tcm_over_azimuths(data, CSM)
     # Find the coherence minima and apply the retrograde assumption
-    CSM.find_minimum_tc(data)
+    TCM.find_minimum_tc(data, CSM)
+    # Calculate phase angle
+    TCM.calculate_phase_angle(data, CSM)
     # Estimate uncertainty
-    CSM.calculate_uncertainty(data)
+    TCM.calculate_uncertainty(data, CSM)
 
-    return CSM.baz_final, CSM.sigma, CSM.t[CSM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2, CSM.mean_coherence  # noqa
+    return TCM.baz_final, TCM.sigma, CSM.t[TCM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2, TCM.mean_coherence  # noqa
