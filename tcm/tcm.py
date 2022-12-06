@@ -46,8 +46,6 @@ def run_tcm(st: type[Stream], freq_min: float, freq_max: float, window_length: f
     TCM.calculate_tcm_over_azimuths(data, CSM)
     # Find the coherence minima and apply the retrograde assumption
     TCM.find_minimum_tc(data, CSM)
-    # Calculate phase angle
-    TCM.calculate_phase_angle(data, CSM)
     # Estimate uncertainty
     TCM.calculate_uncertainty(data, CSM)
 
