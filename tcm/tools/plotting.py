@@ -90,7 +90,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
 
     # Back-azimuth Estimate
     sc1 = axs[4].scatter(time_smooth, baz, c=mean_coherence, cmap=cm,
-                         edgecolors='k', lw=0.3)
+                         edgecolors=None, lw=0.3)
     axs[4].set_ylim(0, 360)
     axs[4].set_yticks([0, 90, 180, 270, 360])
     axs[4].set_ylabel('Back-Azimuth \n [Deg.]')
