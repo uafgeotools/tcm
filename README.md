@@ -5,7 +5,7 @@ This package consists of tools for the transverse coherence minimization (tcm) s
 Installation
 ---------------
 
-*Here are install instructions for an example conda environment. For consistency, we encourage all interfacing packages in uafgeotools to use conda environments.*
+*Here are install instructions for an example conda environment.*
 
 We recommend using conda and creating a new conda environment such as:
 ```
@@ -38,7 +38,7 @@ Python packages:
 
 Example
 -----------
-See the included *example script here.py*.
+See the included *example.py*.
 
 
 Usage
@@ -50,7 +50,7 @@ $ conda activate uafinfra
 $ python
 >>> import tcm
 ```
-*Mention documentation here. Perhaps point to the example.py file*
+See  the attached documentation for more information.
 
 Authors
 -------

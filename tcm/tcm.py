@@ -1,12 +1,15 @@
+# Class type hinting only available in Python 3.9+
+from __future__ import annotations
+
+from obspy.core.stream import Stream
 from tcm.classes import tcm_classes, tcm_data_class
 
 
-def run_tcm(st, freq_min, freq_max, window_length,
-            window_overlap, az_min=0.0, az_max=359.0, az_delta=1.0):
+def run_tcm(st: type[Stream], freq_min: float, freq_max: float, window_length: float, window_overlap: float, az_min: float = 0.0, az_max: float = 359.0, az_delta: float = 1.0) -> tuple: # noqa
     """ Process stream data with the transverse coherence minimization algorithm (TCM).
 
     Args:
-        st: Obspy stream object. Assumes response has been removed.
+        st: An obspy stream object. Assumes any preprocessing has already occured.
         freq_min (float): Minimum frequency for analysis.
         freq_max (float): Maximum frequency for analysis.
         window_length (float): Window length in seconds.
@@ -34,12 +37,16 @@ def run_tcm(st, freq_min, freq_max, window_length,
     data.build_data_arrays(st)
 
     # Create cross-spectral matrix object
-    CSM = tcm_classes.Spectral(data)
+    CSM = tcm_classes.SpectralEstimation(data)
     # Calculate spectra, cross-spectra, and vertical component coherence
     CSM.calculate_spectral_matrices(data)
+    # Create the TCM object
+    TCM = tcm_classes.TCM(data, CSM)
     # Calculate the transverse coherence over all trial azimuths
-    CSM.calculate_tcm_over_azimuths(data)
+    TCM.calculate_tcm_over_azimuths(data, CSM)
     # Find the coherence minima and apply the retrograde assumption
-    CSM.find_minimum_tc(data)
+    TCM.find_minimum_tc(data, CSM)
+    # Estimate uncertainty
+    TCM.calculate_uncertainty(data, CSM)
 
-    return CSM.baz_final, CSM.sigma, CSM.t[CSM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2, CSM.mean_coherence  # noqa
+    return TCM.baz_final, TCM.sigma, CSM.t[TCM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2, TCM.mean_coherence  # noqa
