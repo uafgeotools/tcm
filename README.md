@@ -7,22 +7,20 @@ Installation
 
 *Here are install instructions for an example conda environment.*
 
-We recommend using conda and creating a new conda environment such as:
+We recommend using conda and creating a new conda environment such as
 ```
-conda create -n uafinfra python=3 obspy numba
+conda create -n tcm_env python=3 obspy numba
 ```
-
-If you have a previously created `uafinfra` environment, you may need to install the `numba <http://numba.pydata.org>`__  package with
-
+or from the provided `.yml` file as
 ```
-conda install --name uafinfra numba
+conda env create -f environment.yml
 ```
 
 Information on conda environments (and more) is available [here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
 
 After setting up the conda environment, [install](https://pip.pypa.io/en/latest/reference/pip_install/#editable-installs) the package by running the terminal commands:
 ```
-conda activate uafinfra
+conda activate tcm_env
 git clone https://github.com/uafgeotools/tcm
 cd tcm
 pip install -e .
@@ -35,9 +33,6 @@ command only needs to be run once.
 Dependencies
 --------------------
 *For example:*
-
-_uafgeotools_ packages:
-* [_waveform_collection_](https://github.com/uafgeotools/waveform_collection)
 
 Python packages:
 * [Python3](https://docs.python.org/3/)
@@ -54,7 +49,7 @@ Usage
 ---------
 Import the package like any other python package, ensuring the correct environment is active. For example,
 ```
-$ conda activate uafinfra
+$ conda activate tcm_env
 $ python
 >>> import tcm
 ```

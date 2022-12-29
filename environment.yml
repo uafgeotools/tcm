@@ -1,13 +1,10 @@
-name: uafinfra
+name: tcm_env
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - fastkml
-  - ipython
   - obspy
   - numba
   - pip
   - pip:
-    - git+https://github.com/uafgeotools/waveform_collection.git
     - -e .
