@@ -6,7 +6,7 @@ class DataBin:
 
     def __init__(self, freq_min, freq_max, window_length,
                  window_overlap, az_min, az_max,
-                 az_delta, search_2hz):
+                 az_delta, search_2Hz):
         self.freq_min = freq_min
         self.freq_max = freq_max
         self.window_length = window_length
@@ -14,7 +14,7 @@ class DataBin:
         self.az_min = az_min
         self.az_max = az_max
         self.az_delta = az_delta
-        self.search_2hz = search_2hz
+        self.search_2Hz = search_2Hz
 
     def build_data_arrays(self, st):
         """ Construct data arrays from Obspy Stream object. """

@@ -10,9 +10,10 @@ rcParams.update({'font.size': 10})
 # Filter range [Hz]
 freq_min = 10.0
 freq_max = 20.0
+search_2Hz = True
 
 # Window length [sec]
-window_length = 5.0
+window_length = 15.0
 
 # Fraction of window overlap [0.0, 1.0)
 window_overlap = 0.90
@@ -58,12 +59,12 @@ st.interpolate(sampling_rate=st[0].stats.sampling_rate, method='lanczos', a=15)
 st.detrend(type='linear')
 
 #%% Run the transverse coherence minimization (TCM) algorithm
-baz, sigma, time_smooth, frequency_vector, time, Cxy2, mean_coherence = tcm.run_tcm(st, freq_min, freq_max, window_length, window_overlap, az_min, az_max, az_delta) # noqa
+baz, sigma, time_smooth, frequency_vector, time, Cxy2, mean_coherence, freq_lim_min, freq_lim_max = tcm.run_tcm(st, freq_min, freq_max, window_length, window_overlap, az_min, az_max, az_delta, search_2Hz) # noqa
 
 #%% Plot the results
 fig, axs = plotting.tcm_plot(st, freq_min, freq_max, baz,
                              time_smooth, frequency_vector, time,
-                             Cxy2, mean_coherence)
-# Uncertainties
+                             Cxy2, mean_coherence, freq_lim_min, freq_lim_max)
+# Plot uncertainties
 axs[4].scatter(time_smooth, baz + sigma, c='gray', marker='_', linestyle=':')
 axs[4].scatter(time_smooth, baz - sigma, c='gray', marker='_', linestyle=':')

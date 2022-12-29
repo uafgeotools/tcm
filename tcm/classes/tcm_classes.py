@@ -20,7 +20,8 @@ def _calculate_tcm_over_azimuths(nits, az_vector, Cxy2, Cxy2_trial, S_ni,
                 the vertical coherence. """
             weighted_coherence_v[kk, jj] = np.sum(Cxy2_trial[fmin_ind[jj]:fmax_ind[jj], jj] * Cxy2[fmin_ind[jj]:fmax_ind[jj], jj]) # noqa
             # Sum of vertical coherence for denominator of weighted sum
-            sum_coherence_v[kk, jj] = np.sum(Cxy2[fmin_ind[jj]:fmax_ind[jj], jj])
+            sum_coherence_v[kk, jj] = np.sum(
+                Cxy2[fmin_ind[jj]:fmax_ind[jj], jj])
 
     weighted_coherence = weighted_coherence_v/sum_coherence_v # noqa
 
@@ -135,14 +136,17 @@ class TCM:
         fmax_ind0 = np.argmin(np.abs(data.freq_max - spectrum.freq_vector))
         self.fmin_ind = np.array([fmin_ind0] * data.nits)
         self.fmax_ind = np.array([fmax_ind0] * data.nits)
+        self.freq_min_array = np.array([data.freq_min] * data.nits)
+        self.freq_ma_array = np.array([data.freq_max] * data.nits)
 
-        if data.search_2hz:
+        if data.search_2Hz:
             # Determine the number of 2 Hz bins in the frequency band:
             f_bandwidth = 2.0
             df = spectrum.freq_vector[1] - spectrum.freq_vector[0]
             f_bandwidth_increment = int(np.floor(f_bandwidth / df))
             n_bins = np.floor((data.freq_max - data.freq_min) / f_bandwidth)
-            n_residual = ((data.freq_max - data.freq_min) / f_bandwidth) - n_bins
+            n_residual = ((data.freq_max - data.freq_min)
+                          / f_bandwidth) - n_bins
             n_bins = int(n_bins)
             if n_bins > 1.0:
                 for jj in range(0, data.nits):
@@ -150,7 +154,8 @@ class TCM:
                     f_max_iterable = fmin_ind0 + f_bandwidth_increment
                     coh_max = 0
                     for kk in range(0, n_bins):
-                        coh_max_test = np.mean(spectrum.Cxy2[f_min_iterable:f_max_iterable, jj])
+                        coh_max_test = np.mean(spectrum.Cxy2[
+                            f_min_iterable:f_max_iterable, jj])
                         if coh_max_test > coh_max:
                             coh_max = coh_max_test
                             self.fmin_ind[jj] = f_min_iterable
@@ -162,22 +167,26 @@ class TCM:
                     if n_residual > 0.0:
                         f_min_iterable = fmax_ind0 - f_bandwidth_increment
                         f_max_iterable = fmax_ind0
-                        coh_max_test = np.mean(spectrum.Cxy2[f_min_iterable:f_max_iterable, jj])
+                        coh_max_test = np.mean(spectrum.Cxy2[
+                            f_min_iterable:f_max_iterable, jj])
                         if coh_max_test > coh_max:
                             coh_max = coh_max_test
                             self.fmin_ind[jj] = f_min_iterable
                             self.fmax_ind[jj] = f_max_iterable
+            self.freq_min_array = spectrum.freq_vector[self.fmin_ind]
+            self.freq_max_array = spectrum.freq_vector[self.fmax_ind]
         else:
             pass
 
         # Calculate phase angle between vertical seismic and infrasound
-        self.phase_angle = np.empty((len(spectrum.freq_vector), data.nits))
+        # self.phase_angle = np.empty((len(spectrum.freq_vector), data.nits))
 
         # Pre-allocate trial azimuth transverse-coherence matrices
         self.Cxy2_trial = np.empty((len(spectrum.freq_vector), data.nits))
         self.weighted_coherence_v = np.empty((len(self.az_vector), data.nits))
         self.sum_coherence_v = np.empty((len(self.az_vector), data.nits))
-        self.weighted_coherence = np.empty((len(spectrum.freq_vector), data.nits))
+        self.weighted_coherence = np.empty(
+            (len(spectrum.freq_vector), data.nits))
 
     def calculate_tcm_over_azimuths(self, data, spectrum):
         """ Calculate the  transverse coherence over all trial azimuths. """
@@ -242,7 +251,9 @@ class TCM:
     # def calculate_phase_angle(self, data, spectrum):
     #     """ Calculate phase angle between infrasound and vertical seismic. """
     #     for jj in range(0, data.nits):
-    #         self.phase_angle[:, jj] = np.arctan2(-np.real(spectrum.S_zi[:, jj]), np.imag(np.conj(spectrum.S_zi[:, jj]))) * 180/np.pi
+    #         self.phase_angle[:, jj] = np.arctan2(
+    # -np.real(spectrum.S_zi[:, jj]), np.imag(
+    # np.conj(spectrum.S_zi[:, jj]))) * 180/np.pi
 
     def calculate_uncertainty(self, data, spectrum):
         """ Calculate uncertainty. """
@@ -267,4 +278,5 @@ class TCM:
         # Calculate sigma
         self.sigma = np.full_like(self.smvc, np.nan, dtype='float')
         idx_valid = np.where(A2 > 0.0)[0]
-        self.sigma[idx_valid] = np.sqrt((3 * n2[idx_valid]) / (16 * A2[idx_valid]))
+        self.sigma[idx_valid] = np.sqrt(
+            (3 * n2[idx_valid]) / (16 * A2[idx_valid]))
