@@ -137,7 +137,7 @@ class TCM:
         self.fmin_ind = np.array([fmin_ind0] * data.nits)
         self.fmax_ind = np.array([fmax_ind0] * data.nits)
         self.freq_min_array = np.array([data.freq_min] * data.nits)
-        self.freq_ma_array = np.array([data.freq_max] * data.nits)
+        self.freq_max_array = np.array([data.freq_max] * data.nits)
 
         if data.search_2Hz:
             # Determine the number of 2 Hz bins in the frequency band:
