@@ -31,6 +31,14 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
             ``fig``: Output figure handle.
             ``axs``: Output axis handle.
     """
+    #filter the data for plotting
+    stf = st.copy()
+    stf.detrend(type='linear')
+    stf.taper(max_percentage=.02)
+    stf.filter('bandpass', freqmin=freq_min, freqmax=freq_max, corners=2,
+               zerophase=True)
+    print(stf)
+
     # Specify the colormap.
     cm = colorm
 
@@ -55,12 +63,12 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
 
     fig, axs = plt.subplots(6, 1, sharex='col', figsize=(8, 11))
     # Infrasound
-    axs[0].plot(tvec_f, tr_f.data, c='k')
+    axs[0].plot(tvec_f, stf[1].data, c='k')
     axs[0].set_ylabel('Pressure [Pa]')
     axs[0].text(0.75, 0.8, tr_f.id, transform=axs[0].transAxes)
 
     # Vertical component of seismic trace (displacement)
-    axs[1].plot(tvec_z, tr_z.data, c='k')
+    axs[1].plot(tvec_z, stf[3].data, c='k')
     axs[1].set_ylabel('Displacement [m]')
     axs[1].text(0.75, 0.8, tr_z.id, transform=axs[1].transAxes)
 
