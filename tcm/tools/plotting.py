@@ -7,7 +7,7 @@ import numpy as np
 
 colorm = LinearSegmentedColormap.from_list('', ['white', *plt.cm.get_cmap('magma_r').colors])
 
-def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, mean_coherence, freq_min_array, freq_max_array):  # noqa
+def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, mean_coherence, freq_min_array, freq_max_array, search_2Hz):  # noqa
     """ Return a plot of the TCM results.
 
     Plots (a) the vertical seismic trace, (b) the magnitude squared coherence
@@ -26,6 +26,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
         mean_coherence (array):
         freq_min_array (array):
         freq_max_array (array):
+        search_2Hz: (bool): Calculate and plot 2 Hz coherence band
 
     Returns:
         (tuple):
@@ -97,12 +98,13 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     p1 = axs[3].get_position()
     sc0.set_clim(c_lim)
 
-    #plot narrow band frequency boxes, align time vector with coherence
-    tdiff = time[1]-time[0]
-    for i in range(len(time)):
-        rect = patches.Rectangle((time[i]+tdiff/2,freq_min_array[i]), tdiff, 2,
-                                 linewidth=.5, edgecolor='k', facecolor='none')
-        axs[3].add_patch(rect)
+    if search_2Hz:
+        #plot narrow band frequency boxes, align time vector with coherence
+        tdiff = time[1]-time[0]
+        for i in range(len(time)):
+            rect = patches.Rectangle((time[i]+tdiff/2,freq_min_array[i]), tdiff, 2,
+                                     linewidth=.5, edgecolor='k', facecolor='none')
+            axs[3].add_patch(rect)
 
     # Back-azimuth Estimate
     sc1 = axs[4].scatter(time_smooth, baz, c=mean_coherence, cmap=cm,

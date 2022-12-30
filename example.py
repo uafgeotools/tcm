@@ -64,7 +64,8 @@ baz, sigma, time_smooth, frequency_vector, time, Cxy2, mean_coherence, freq_lim_
 #%% Plot the results
 fig, axs = plotting.tcm_plot(st, freq_min, freq_max, baz,
                              time_smooth, frequency_vector, time,
-                             Cxy2, mean_coherence, freq_lim_min, freq_lim_max)
+                             Cxy2, mean_coherence, freq_lim_min, freq_lim_max,
+                             search_2Hz)
 # Plot uncertainties
 axs[4].scatter(time_smooth, baz + sigma, c='gray', marker='_', linestyle=':')
 axs[4].scatter(time_smooth, baz - sigma, c='gray', marker='_', linestyle=':')
