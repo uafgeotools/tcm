@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 from matplotlib import dates
 from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.patches as patches
 from scipy.signal import spectrogram
 import numpy as np
 
 colorm = LinearSegmentedColormap.from_list('', ['white', *plt.cm.get_cmap('magma_r').colors])
 
-def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, mean_coherence):  # noqa
+def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, mean_coherence, freq_min_array, freq_max_array, search_2Hz):  # noqa
     """ Return a plot of the TCM results.
 
     Plots (a) the vertical seismic trace, (b) the magnitude squared coherence
@@ -23,14 +24,23 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
         time (array):
         Cxy2 (array):
         mean_coherence (array):
+        freq_min_array (array):
+        freq_max_array (array):
+        search_2Hz: (bool): Calculate and plot 2 Hz coherence band
 
     Returns:
         (tuple):
             ``fig``: Output figure handle.
             ``axs``: Output axis handle.
     """
+    #filter the data for plotting
+    stf = st.copy()
+    stf.detrend(type='linear')
+    stf.taper(max_percentage=.02)
+    stf.filter('bandpass', freqmin=freq_min, freqmax=freq_max, corners=2,
+               zerophase=True)
+
     # Specify the colormap.
-    #cm = 'magma_r'
     cm = colorm
 
     # Colorbar/y-axis limits for the vertical coherence
@@ -54,12 +64,12 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
 
     fig, axs = plt.subplots(5, 1, sharex='col', figsize=(8, 11))
     # Infrasound
-    axs[0].plot(tvec_f, tr_f.data, c='k')
+    axs[0].plot(tvec_f, stf[1].data, c='k')
     axs[0].set_ylabel('Pressure [Pa]')
     axs[0].text(0.75, 0.8, tr_f.id, transform=axs[0].transAxes)
 
     # Vertical component of seismic trace (displacement)
-    axs[1].plot(tvec_z, tr_z.data, c='k')
+    axs[1].plot(tvec_z, stf[3].data, c='k')
     axs[1].set_ylabel('Displacement [m]')
     axs[1].text(0.75, 0.8, tr_z.id, transform=axs[1].transAxes)
 
@@ -88,9 +98,17 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     p1 = axs[3].get_position()
     sc0.set_clim(c_lim)
 
+    if search_2Hz:
+        #plot narrow band frequency boxes, align time vector with coherence
+        tdiff = time[1]-time[0]
+        for i in range(len(time)):
+            rect = patches.Rectangle((time[i]+tdiff/2,freq_min_array[i]), tdiff, 2,
+                                     linewidth=.5, edgecolor='k', facecolor='none')
+            axs[3].add_patch(rect)
+
     # Back-azimuth Estimate
     sc1 = axs[4].scatter(time_smooth, baz, c=mean_coherence, cmap=cm,
-                         edgecolors='k', lw=0.3)
+                         edgecolors=None, lw=0.3)
     axs[4].set_ylim(0, 360)
     axs[4].set_yticks([0, 90, 180, 270, 360])
     axs[4].set_ylabel('Back-Azimuth \n [Deg.]')

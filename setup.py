@@ -6,7 +6,7 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     INSTALL_REQUIRES = []
 else:
-    INSTALL_REQUIRES = ['waveform_collection']
+    INSTALL_REQUIRES = ['obspy', 'numpy', 'scipy', 'numba']
 
 setup(
     name='tcm',

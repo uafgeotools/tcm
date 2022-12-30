@@ -18,9 +18,10 @@ def _calculate_tcm_over_azimuths(nits, az_vector, Cxy2, Cxy2_trial, S_ni,
 
             """ Weighting trial transverse coherence values using
                 the vertical coherence. """
-            weighted_coherence_v[kk, jj] = np.sum(Cxy2_trial[fmin_ind:fmax_ind, jj] * Cxy2[fmin_ind:fmax_ind, jj]) # noqa
+            weighted_coherence_v[kk, jj] = np.sum(Cxy2_trial[fmin_ind[jj]:fmax_ind[jj], jj] * Cxy2[fmin_ind[jj]:fmax_ind[jj], jj]) # noqa
             # Sum of vertical coherence for denominator of weighted sum
-            sum_coherence_v[kk, jj] = np.sum(Cxy2[fmin_ind:fmax_ind, jj])
+            sum_coherence_v[kk, jj] = np.sum(
+                Cxy2[fmin_ind[jj]:fmax_ind[jj], jj])
 
     weighted_coherence = weighted_coherence_v/sum_coherence_v # noqa
 
@@ -116,6 +117,7 @@ class SpectralEstimation:
                 data.Z[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
                 nperseg=self.sub_window, noverlap=self.noverlap)
+            # self.Cxy2[:, jj] = np.power(self.Cxy2[:, jj], 2.0)
 
 
 class TCM:
@@ -130,17 +132,61 @@ class TCM:
         self.nsmth = 8
 
         # Get the closest frequency points to the preferred ones
-        self.fmin_ind = np.argmin(np.abs(data.freq_min - spectrum.freq_vector))
-        self.fmax_ind = np.argmin(np.abs(data.freq_max - spectrum.freq_vector))
+        fmin_ind0 = np.argmin(np.abs(data.freq_min - spectrum.freq_vector))
+        fmax_ind0 = np.argmin(np.abs(data.freq_max - spectrum.freq_vector))
+        self.fmin_ind = np.array([fmin_ind0] * data.nits)
+        self.fmax_ind = np.array([fmax_ind0] * data.nits)
+        self.freq_min_array = np.array([data.freq_min] * data.nits)
+        self.freq_max_array = np.array([data.freq_max] * data.nits)
+
+        if data.search_2Hz:
+            # Determine the number of 2 Hz bins in the frequency band:
+            f_bandwidth = 2.0
+            df = spectrum.freq_vector[1] - spectrum.freq_vector[0]
+            f_bandwidth_increment = int(np.floor(f_bandwidth / df))
+            n_bins = np.floor((data.freq_max - data.freq_min) / f_bandwidth)
+            n_residual = ((data.freq_max - data.freq_min)
+                          / f_bandwidth) - n_bins
+            n_bins = int(n_bins)
+            if n_bins > 1.0:
+                for jj in range(0, data.nits):
+                    f_min_iterable = fmin_ind0
+                    f_max_iterable = fmin_ind0 + f_bandwidth_increment
+                    coh_max = 0
+                    for kk in range(0, n_bins):
+                        coh_max_test = np.mean(spectrum.Cxy2[
+                            f_min_iterable:f_max_iterable, jj])
+                        if coh_max_test > coh_max:
+                            coh_max = coh_max_test
+                            self.fmin_ind[jj] = f_min_iterable
+                            self.fmax_ind[jj] = f_max_iterable
+                        else:
+                            pass
+                        f_min_iterable += f_bandwidth_increment
+                        f_max_iterable += f_bandwidth_increment
+                    if n_residual > 0.0:
+                        f_min_iterable = fmax_ind0 - f_bandwidth_increment
+                        f_max_iterable = fmax_ind0
+                        coh_max_test = np.mean(spectrum.Cxy2[
+                            f_min_iterable:f_max_iterable, jj])
+                        if coh_max_test > coh_max:
+                            coh_max = coh_max_test
+                            self.fmin_ind[jj] = f_min_iterable
+                            self.fmax_ind[jj] = f_max_iterable
+            self.freq_min_array = spectrum.freq_vector[self.fmin_ind]
+            self.freq_max_array = spectrum.freq_vector[self.fmax_ind]
+        else:
+            pass
 
         # Calculate phase angle between vertical seismic and infrasound
-        self.phase_angle = np.empty((len(spectrum.freq_vector), data.nits))
+        # self.phase_angle = np.empty((len(spectrum.freq_vector), data.nits))
 
         # Pre-allocate trial azimuth transverse-coherence matrices
         self.Cxy2_trial = np.empty((len(spectrum.freq_vector), data.nits))
         self.weighted_coherence_v = np.empty((len(self.az_vector), data.nits))
         self.sum_coherence_v = np.empty((len(self.az_vector), data.nits))
-        self.weighted_coherence = np.empty((len(spectrum.freq_vector), data.nits))
+        self.weighted_coherence = np.empty(
+            (len(spectrum.freq_vector), data.nits))
 
     def calculate_tcm_over_azimuths(self, data, spectrum):
         """ Calculate the  transverse coherence over all trial azimuths. """
@@ -188,8 +234,8 @@ class TCM:
         self.smvc = np.arange(((self.nsmth/2) + 1), (data.nits - (self.nsmth/2)) + 1, dtype='int') # noqa
         # The angle closest to -pi/2 is the azimuth, so the other
         # one is the back-azimuth
-        tst1 = np.sum(self.Cxy2rza[self.fmin_ind:self.fmax_ind, self.smvc] * spectrum.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(spectrum.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
-        tst2 = np.sum(self.Cxy2rza2[self.fmin_ind:self.fmax_ind, self.smvc] * spectrum.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(spectrum.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
+        tst1 = np.sum(self.Cxy2rza[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc] * spectrum.Cxy2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc], axis=0)/np.sum(spectrum.Cxy2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc], axis=0) # noqa
+        tst2 = np.sum(self.Cxy2rza2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc] * spectrum.Cxy2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc], axis=0)/np.sum(spectrum.Cxy2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc], axis=0) # noqa
         # Pick the angle the farthest from -pi/2
         self.baz_final = np.full(data.nits - self.nsmth, np.nan)
         for jj in range(0, len(self.bbv)):
@@ -205,7 +251,9 @@ class TCM:
     # def calculate_phase_angle(self, data, spectrum):
     #     """ Calculate phase angle between infrasound and vertical seismic. """
     #     for jj in range(0, data.nits):
-    #         self.phase_angle[:, jj] = np.arctan2(-np.real(spectrum.S_zi[:, jj]), np.imag(np.conj(spectrum.S_zi[:, jj]))) * 180/np.pi
+    #         self.phase_angle[:, jj] = np.arctan2(
+    # -np.real(spectrum.S_zi[:, jj]), np.imag(
+    # np.conj(spectrum.S_zi[:, jj]))) * 180/np.pi
 
     def calculate_uncertainty(self, data, spectrum):
         """ Calculate uncertainty. """
@@ -224,10 +272,11 @@ class TCM:
 
         # The time vector for the case of nonzero smoothing
         self.smvc = np.arange(((self.nsmth/2) + 1), (data.nits - (self.nsmth/2)) + 1, dtype='int') # noqa
-        A2 = np.sum(Cxy2R[self.fmin_ind:self.fmax_ind, self.smvc] * spectrum.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(spectrum.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
-        n2 = np.sum(Cxy2T[self.fmin_ind:self.fmax_ind, self.smvc] * spectrum.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0)/np.sum(spectrum.Cxy2[self.fmin_ind:self.fmax_ind, self.smvc], axis=0) # noqa
+        A2 = np.sum(Cxy2R[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc] * spectrum.Cxy2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc], axis=0)/np.sum(spectrum.Cxy2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc], axis=0) # noqa
+        n2 = np.sum(Cxy2T[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc] * spectrum.Cxy2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc], axis=0)/np.sum(spectrum.Cxy2[self.fmin_ind[jj]:self.fmax_ind[jj], self.smvc], axis=0) # noqa
 
         # Calculate sigma
         self.sigma = np.full_like(self.smvc, np.nan, dtype='float')
         idx_valid = np.where(A2 > 0.0)[0]
-        self.sigma[idx_valid] = np.sqrt((3 * n2[idx_valid]) / (16 * A2[idx_valid]))
+        self.sigma[idx_valid] = np.sqrt(
+            (3 * n2[idx_valid]) / (16 * A2[idx_valid]))

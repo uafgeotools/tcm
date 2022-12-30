@@ -6,7 +6,7 @@ class DataBin:
 
     def __init__(self, freq_min, freq_max, window_length,
                  window_overlap, az_min, az_max,
-                 az_delta):
+                 az_delta, search_2Hz):
         self.freq_min = freq_min
         self.freq_max = freq_max
         self.window_length = window_length
@@ -14,6 +14,7 @@ class DataBin:
         self.az_min = az_min
         self.az_max = az_max
         self.az_delta = az_delta
+        self.search_2Hz = search_2Hz
 
     def build_data_arrays(self, st):
         """ Construct data arrays from Obspy Stream object. """
@@ -28,8 +29,6 @@ class DataBin:
         # Pull time vector from stream object
         self.tvec = st[0].times('matplotlib')
         # Assign the traces to individual arrays
-        # sorting happens before or here? if here then return stream is different
-        #st.sort(keys=['channel'])
         if len(st) == 4:
             self.Infra = st[1].data
             self.E = st[0].data
