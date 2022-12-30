@@ -38,7 +38,6 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     stf.taper(max_percentage=.02)
     stf.filter('bandpass', freqmin=freq_min, freqmax=freq_max, corners=2,
                zerophase=True)
-    print(stf)
 
     # Specify the colormap.
     cm = colorm
@@ -101,7 +100,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     #plot narrow band frequency boxes, align time vector with coherence
     tdiff = time[1]-time[0]
     for i in range(len(time)):
-        rect = patches.Rectangle((time[i]-tdiff/2,freq_min_array[i]), tdiff, 2,
+        rect = patches.Rectangle((time[i]+tdiff/2,freq_min_array[i]), tdiff, 2,
                                  linewidth=.5, edgecolor='k', facecolor='none')
         axs[3].add_patch(rect)
 
