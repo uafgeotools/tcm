@@ -10,6 +10,8 @@ rcParams.update({'font.size': 10})
 # Filter range [Hz]
 freq_min = 10.0
 freq_max = 20.0
+
+# Use 2 Hz narrowband [True] or broadband [False] coherence maxima for calculation
 search_2Hz = True
 
 # Window length [sec]
