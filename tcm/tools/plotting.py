@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import dates
 from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.patches as patches
 from scipy.signal import spectrogram
 import numpy as np
 
@@ -61,7 +62,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     cmin = np.nanpercentile(PspecdB, 15)
     cmax = np.nanpercentile(PspecdB, 99.5)
 
-    fig, axs = plt.subplots(6, 1, sharex='col', figsize=(8, 11))
+    fig, axs = plt.subplots(5, 1, sharex='col', figsize=(8, 11))
     # Infrasound
     axs[0].plot(tvec_f, stf[1].data, c='k')
     axs[0].set_ylabel('Pressure [Pa]')
@@ -97,6 +98,13 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     p1 = axs[3].get_position()
     sc0.set_clim(c_lim)
 
+    #plot narrow band frequency boxes, align time vector with coherence
+    tdiff = time[1]-time[0]
+    for i in range(len(time)):
+        rect = patches.Rectangle((time[i]-tdiff/2,freq_min_array[i]), tdiff, 2,
+                                 linewidth=.5, edgecolor='k', facecolor='none')
+        axs[3].add_patch(rect)
+
     # Back-azimuth Estimate
     sc1 = axs[4].scatter(time_smooth, baz, c=mean_coherence, cmap=cm,
                          edgecolors=None, lw=0.3)
@@ -112,17 +120,10 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     hc = plt.colorbar(sc0, cax=cbaxes)
     hc.set_label('Max Weighted Coherence')
 
-    axs[5].scatter(time, freq_max_array, c='green', edgecolors=None, lw=0.3)
-    axs[5].scatter(time, freq_min_array, c='blue', edgecolors=None, lw=0.3)
-    axs[5].axis('tight')
-    axs[5].set_xlim(time[0], time[-1])
-    axs[5].set_ylim(freq_min, freq_max)
-    axs[5].set_ylabel('Frequency \n [Hz]')
-
-    axs[5].xaxis_date()
-    axs[5].tick_params(axis='x', labelbottom='on')
-    axs[5].fmt_xdata = dates.DateFormatter('%HH:%MM')
-    axs[5].xaxis.set_major_formatter(dates.DateFormatter("%H:%M:%S"))
-    axs[5].set_xlabel('UTC Time')
+    axs[4].xaxis_date()
+    axs[4].tick_params(axis='x', labelbottom='on')
+    axs[4].fmt_xdata = dates.DateFormatter('%HH:%MM')
+    axs[4].xaxis.set_major_formatter(dates.DateFormatter("%H:%M:%S"))
+    axs[4].set_xlabel('UTC Time')
 
     return fig, axs
