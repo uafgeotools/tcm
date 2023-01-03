@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath('../../tcm/'))
 
 # -- Project information -----------------------------------------------------
 project = 'tcm'
-copyright = 'Bishop, Haney, Fee, and McKee'
+copyright = 'The authors'
 
 # -- General configuration ---------------------------------------------------
 

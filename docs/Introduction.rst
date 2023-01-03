@@ -6,7 +6,6 @@ Introduction
 
 This package contains the transverse coherence minimization (TCM) algorithm written in Python3. This method estimates the back-azimuth of an air-to-ground coupled acoustic wave using an infrasound microphone and a seismometer pair. These codes are referenced in
 
-Bishop, Haney, Fee, McKee et al.
 Full publication info here.
 
 A broader set of geophysical array processing codes are available
@@ -24,7 +23,7 @@ References and Credits
 If you use this code for signal analysis, we ask that you cite the
 following paper:
 
-1. Bishop, Haney, Fee, McKee et  al.
+1. Our paper
 
 License
 -------

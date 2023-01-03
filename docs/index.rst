@@ -7,6 +7,7 @@ This module describes the Transverse Coherence Minimization (TCM) method for bac
     :caption: Contents:
 
     Introduction.rst
+    User_Notes.rst
 
 .. toctree::
     :maxdepth: 2
