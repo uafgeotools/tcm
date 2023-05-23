@@ -63,3 +63,9 @@ Authors
 Jordan W. Bishop <br>
 David Fee <br>
 Matthew M. Haney <br>
+
+
+Acknowledgements and Distribution Statement
+-------------------------------------------
+
+This work was supported by the Defense Threat Reduction Agency Nuclear Arms Control Technology program under contract HQ003421F0112. Approved for public release; distribution is unlimited.
