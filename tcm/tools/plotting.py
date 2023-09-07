@@ -65,12 +65,12 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     fig, axs = plt.subplots(5, 1, sharex='col', figsize=(8, 11))
     # Infrasound
     axs[0].plot(tvec_f, stf[1].data, c='k')
-    axs[0].set_ylabel('Pressure [Pa]')
+    axs[0].set_ylabel('Pressure \n [Pa]')
     axs[0].text(0.75, 0.8, tr_f.id, transform=axs[0].transAxes)
 
     # Vertical component of seismic trace (displacement)
     axs[1].plot(tvec_z, stf[3].data, c='k')
-    axs[1].set_ylabel('Displacement [m]')
+    axs[1].set_ylabel('Displacement \n [m]')
     axs[1].text(0.75, 0.8, tr_z.id, transform=axs[1].transAxes)
 
     # Pressure spectrogram
@@ -78,7 +78,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
                         origin='lower', aspect='auto', interpolation=None, cmap=colorm)
     axs[2].set_yscale('linear')
     im.set_clim(cmin, cmax)
-    axs[2].set_ylabel('Frequency [Hz]')
+    axs[2].set_ylabel('Frequency \n [Hz]')
     axs[2].set_ylim(spec_yl[0], spec_yl[1])
     axs[2].set_xlim(tvec_f[0], tvec_f[-1])
 

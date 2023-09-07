@@ -48,21 +48,21 @@ class SpectralEstimation:
         # Pre-allocate cross spectral matrices (S)
         # Vertical and Infrasound
         self.S_zi = np.empty((len(self.freq_vector),
-                              data.nits), dtype=np.complex)
+                              data.nits), dtype=complex)
         # Infrasound
         self.S_ii = np.full((len(self.freq_vector), data.nits), np.nan)
         # Vertical
         self.S_zz = np.full((len(self.freq_vector), data.nits), np.nan)
         # East-Infrasound
-        self.S_ei = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_ei = np.empty((len(self.freq_vector), data.nits), dtype=complex) # noqa
         # North-Infrasound
-        self.S_ni = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_ni = np.empty((len(self.freq_vector), data.nits), dtype=complex) # noqa
         # East-East
-        self.S_ee = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_ee = np.empty((len(self.freq_vector), data.nits), dtype=complex) # noqa
         # North-North
-        self.S_nn = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_nn = np.empty((len(self.freq_vector), data.nits), dtype=complex) # noqa
         # North-East
-        self.S_ne = np.empty((len(self.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.S_ne = np.empty((len(self.freq_vector), data.nits), dtype=complex) # noqa
         # Magnitude Squared Coherence
         self.Cxy2 = np.full((len(self.freq_vector), data.nits), np.nan)
 
@@ -214,8 +214,8 @@ class TCM:
                 self.weighted_coherence[:, jj:(jj + self.nsmth + 1)], 1))
 
         # Resolve the 180 degree ambiguity by assuming retrograde motion
-        self.Cxy2rz = np.empty((len(spectrum.freq_vector), data.nits), dtype=np.complex) # noqa
-        self.Cxy2rz2 = np.empty((len(spectrum.freq_vector), data.nits), dtype=np.complex) # noqa
+        self.Cxy2rz = np.empty((len(spectrum.freq_vector), data.nits), dtype=complex) # noqa
+        self.Cxy2rz2 = np.empty((len(spectrum.freq_vector), data.nits), dtype=complex) # noqa
         self.Cxy2rza = np.empty((len(spectrum.freq_vector), data.nits)) # noqa
         self.Cxy2rza2 = np.empty((len(spectrum.freq_vector), data.nits)) # noqa
         for jj in range(0, data.nits - self.nsmth):
