@@ -1,6 +1,8 @@
 tcm
 =============
-This package consists of tools for the transverse coherence minimization (tcm) seismo-acoustic analysis method.
+This package consists of tools for the transverse coherence minimization (TCM) seismo-acoustic analysis method. TCM can be used to estimate the back-azimuth of infrasound signals that are recorded on an infrasound sensor and a colocated three-component seismometer. When using this code we ask you to cite the following paper, which also provides details on the method and some examples:
+
+Bishop, J. W., Haney, M. M., Fee, D., Matoza, R. S., Mckee, K. F., & Lyons, J. J. (2023). Back-Azimuth Estimation of Air-to-Ground Coupled Infrasound from Transverse Coherence Minimization, 249–258. https://doi.org/10.1785/0320230023.
 
 Installation
 ---------------
