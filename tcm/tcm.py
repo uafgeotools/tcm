@@ -28,7 +28,7 @@ def run_tcm(st: type[Stream], freq_min: float, freq_max: float, window_length: f
             ``freq_vector`` (array): frequency vector for Cxy2.
             ``time_vector`` (array): time vector for Cxy2.
             ``Cxy2`` (array): Magnitude-squared coherence between the vertical displacement (Z) and the infrasound pressure.
-            ``mean_coherence`` (array):  Mean coherence value across smoothed back-azimuth estimate.
+            ``median_coherence`` (array):  Median coherence value across smoothed back-azimuth estimate.
             ``freq_min_array`` (array): minimum frequency used in the ith time window; defaults to ``freq_min``.
             ``freq_max_array`` (array): maximum frequency used in the ith time window; defaults to ``freq_max``.
 
@@ -52,4 +52,4 @@ def run_tcm(st: type[Stream], freq_min: float, freq_max: float, window_length: f
     # Estimate uncertainty
     TCM.calculate_uncertainty(data, CSM)
 
-    return TCM.baz_final, TCM.sigma, CSM.t[TCM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2, TCM.mean_coherence, TCM.freq_min_array, TCM.freq_max_array  # noqa
+    return TCM.baz_final, TCM.sigma, CSM.t[TCM.smvc], CSM.freq_vector, CSM.t, CSM.Cxy2, TCM.median_coherence, TCM.freq_min_array, TCM.freq_max_array  # noqa
