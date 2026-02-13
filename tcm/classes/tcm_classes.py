@@ -16,19 +16,10 @@ def _calculate_tcm_over_azimuths(nits, az_vector, Cxy2, Cxy2_trial, S_ni,
         for kk in range(0, len(az_vector)):
             Cxy2_trial[:, jj] = (np.abs(S_ni[:, jj] * np.sin(az_vector[kk] * np.pi/180) - S_ei[:, jj] * np.cos(az_vector[kk] * np.pi/180))**2) / (np.abs(S_nn[:, jj] * np.sin(az_vector[kk] * np.pi/180)**2 - np.real(S_ne[:, jj]) * np.sin(2 * az_vector[kk] * np.pi/180) + S_ee[:, jj] * np.cos(az_vector[kk] * np.pi/180)**2) * np.abs(S_ii[:, jj])) # noqa
 
-            """ Weighting trial transverse coherence values using
-                the vertical coherence. """
-            #weighted_coherence_v[kk, jj] = np.sum(Cxy2_trial[fmin_ind[jj]:fmax_ind[jj], jj] * Cxy2[fmin_ind[jj]:fmax_ind[jj], jj]) # noqa
-            # Sum of vertical coherence for denominator of weighted sum
-            #sum_coherence_v[kk, jj] = np.sum(
-            #    Cxy2[fmin_ind[jj]:fmax_ind[jj], jj])
             """ Unweighted, purely T-I coherence minimization. """
             ZI_coherence[kk, jj] = np.median(Cxy2[fmin_ind[jj]:fmax_ind[jj], jj])  # Does not change with azimuth, but stored for convenience
             TI_coherence[kk, jj] = np.median(Cxy2_trial[fmin_ind[jj]:fmax_ind[jj], jj])  # Here is where median infrasound-transverse coherence is calculated for each time/azimuth
 
-    #weighted_coherence = weighted_coherence_v/sum_coherence_v # noqa
-
-    #return weighted_coherence
     return ZI_coherence, TI_coherence
 
 
@@ -121,7 +112,6 @@ class SpectralEstimation:
                 data.Z[t0_ind:tf_ind], data.Infra[t0_ind:tf_ind],
                 fs=data.sampling_rate, window=self.window,
                 nperseg=self.sub_window, noverlap=self.noverlap)
-            # self.Cxy2[:, jj] = np.power(self.Cxy2[:, jj], 2.0)
 
 
 class TCM:
@@ -182,16 +172,9 @@ class TCM:
         else:
             pass
 
-        # Calculate phase angle between vertical seismic and infrasound
-        # self.phase_angle = np.empty((len(spectrum.freq_vector), data.nits))
-
         # Pre-allocate trial azimuth transverse-coherence matrices
         self.Cxy2_trial = np.empty((len(spectrum.freq_vector), data.nits))
-        #self.weighted_coherence_v = np.empty((len(self.az_vector), data.nits))
-        #self.sum_coherence_v = np.empty((len(self.az_vector), data.nits))
-        #self.weighted_coherence = np.empty(
-        #    (len(spectrum.freq_vector), data.nits))
-        self.ZI_coherence = np.empty((len(self.az_vector), data.nits))  # NEW
+        self.ZI_coherence = np.empty((len(self.az_vector), data.nits))
         self.TI_coherence = np.empty((len(self.az_vector), data.nits))
 
     def calculate_tcm_over_azimuths(self, data, spectrum):
@@ -203,7 +186,6 @@ class TCM:
         # Apply some smoothing if desired
         self.bbv = np.full(data.nits - self.nsmth, 0, dtype='int')
         self.bbv2 = np.full(data.nits - self.nsmth, 0, dtype='int')
-        #self.mean_coherence = np.full(data.nits - self.nsmth, np.nan)
         self.median_coherence = np.full(data.nits - self.nsmth, np.nan)
         self.mean_phase_angle = np.full(data.nits - self.nsmth, 0, dtype='int')
 
@@ -217,9 +199,6 @@ class TCM:
             # Info on the amount of coherence
             self.median_coherence[jj] = np.max(np.median(
                 self.ZI_coherence[:, jj:(jj + self.nsmth + 1)], axis=1))  # NEW
-
-            #self.mean_phase_angle[jj] = np.argmax(np.mean(
-            #    self.weighted_coherence[:, jj:(jj + self.nsmth + 1)], 1))
 
         # Resolve the 180 degree ambiguity by assuming retrograde motion
         self.Cxy2rz = np.empty((len(spectrum.freq_vector), data.nits), dtype=complex) # noqa
@@ -255,13 +234,6 @@ class TCM:
 
         # Convert azimuth to back-azimuth
         self.baz_final = (self.baz_final + 360) % 360
-
-    # def calculate_phase_angle(self, data, spectrum):
-    #     """ Calculate phase angle between infrasound and vertical seismic. """
-    #     for jj in range(0, data.nits):
-    #         self.phase_angle[:, jj] = np.arctan2(
-    # -np.real(spectrum.S_zi[:, jj]), np.imag(
-    # np.conj(spectrum.S_zi[:, jj]))) * 180/np.pi
 
     def calculate_uncertainty(self, data, spectrum):
         """ Calculate uncertainty. """
