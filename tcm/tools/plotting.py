@@ -7,7 +7,7 @@ import numpy as np
 
 colorm = LinearSegmentedColormap.from_list('', ['white', *plt.cm.get_cmap('magma_r').colors])
 
-def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, mean_coherence, freq_min_array, freq_max_array, search_2Hz):  # noqa
+def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, median_coherence, freq_min_array, freq_max_array, search_2Hz):  # noqa
     """ Return a plot of the TCM results.
 
     Plots (a) the vertical seismic trace, (b) the magnitude squared coherence
@@ -23,7 +23,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
         freq_vector (array):
         time (array):
         Cxy2 (array):
-        mean_coherence (array):
+        median_coherence (array):
         freq_min_array (array):
         freq_max_array (array):
         search_2Hz: (bool): Calculate and plot 2 Hz coherence band
@@ -107,7 +107,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
             axs[3].add_patch(rect)
 
     # Back-azimuth Estimate
-    sc1 = axs[4].scatter(time_smooth, baz, c=mean_coherence, cmap=cm,
+    sc1 = axs[4].scatter(time_smooth, baz, c=median_coherence, cmap=cm,
                          edgecolors=None, lw=0.3)
     axs[4].set_ylim(0, 360)
     axs[4].set_yticks([0, 90, 180, 270, 360])
@@ -119,7 +119,7 @@ def tcm_plot(st, freq_min, freq_max, baz, time_smooth, freq_vector, time, Cxy2, 
     ctop = p1.y1
     cbaxes = fig.add_axes([p2.x0+p2.width+0.03, cbot, 0.02, ctop-cbot])
     hc = plt.colorbar(sc0, cax=cbaxes)
-    hc.set_label('Max Weighted Coherence')
+    hc.set_label('Median Coherence')
 
     axs[4].xaxis_date()
     axs[4].tick_params(axis='x', labelbottom='on')

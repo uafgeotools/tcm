@@ -65,6 +65,7 @@ Authors
 Jordan W. Bishop <br>
 David Fee <br>
 Matthew M. Haney <br>
+Logan Scamfer <br>
 
 
 Acknowledgements and Distribution Statement
